@@ -20,7 +20,7 @@ https://hub.docker.com/editions/community/docker-ce-desktop-mac
 ## Quick Start
 
 ```
-cromwell run -i test_data/test-run-1.json demultiplex_and_basecall.wdl 
+cromwell run -i test_data/test-run-1.json preprocess_flowcell.wdl 
 ```
 
 
