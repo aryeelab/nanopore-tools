@@ -87,3 +87,6 @@ RUN set -ex; \
 ADD ont_albacore-2.3.4-cp36-cp36m-manylinux1_x86_64.whl /ont_albacore-2.3.4-cp36-cp36m-manylinux1_x86_64.whl
 RUN pip install /ont_albacore-2.3.4-cp36-cp36m-manylinux1_x86_64.whl
 RUN pip install NanoPlot
+
+RUN apt-get update && apt-get install -y default-jdk
+
