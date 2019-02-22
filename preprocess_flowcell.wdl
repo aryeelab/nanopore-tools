@@ -1,4 +1,4 @@
-workflow demultiplex_and_basecall {
+workflow preprocess_flowcell {
 
     # Run albacore to basecall and demultiplex
     call albacore
