@@ -3,10 +3,13 @@ workflow preprocess_flowcell {
     # Run albacore to basecall and demultiplex
     call albacore
     
-    # Remove reads with duplicate IDs
-    scatter (fastq_gz in albacore.fastq_gzs) { call deduplicate {input: fastq_gz = fastq_gz} }
+    scatter (fastq_gz in albacore.fastq_gzs) {    
+        # Remove reads with duplicate IDs
+        call deduplicate {input: fastq_gz = fastq_gz}
 
-    
+        # Align with minimap2
+        call align {input: fastq_gz = deduplicate.dedup_fastq_gz}
+    }
 
 }
 
@@ -69,6 +72,26 @@ task deduplicate {
     
     output {
         File dedup_fastq_gz = "${base}.dedup.fq.gz"
-    }    
+    }       
+}
+
+task align {
+
+    File fastq_gz
+    File genome_index
+    String base = basename(fastq_gz, ".fq.gz")
+
+    command <<<
+        minimap2 -ax map-ont -t 1 "${genome_index}" "${fastq_gz}" | samtools sort -o "${base}.bam";
+    >>>
+
+    runtime {
+        docker: "aryeelab/nanopore_minimap2"
+    }
     
+    output {
+        File bam = "${base}.bam"
+    }       
+    
+
 }

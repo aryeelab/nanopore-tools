@@ -2,5 +2,7 @@
     "preprocess_flowcell.albacore.run_id": "test-run-1",
     "preprocess_flowcell.albacore.fast5_zip": "test_data/test-run-1.zip",
     "preprocess_flowcell.albacore.flowcell_id": "FLO-MIN106",
-    "preprocess_flowcell.albacore.kit_id": "SQK-RBK004"
+    "preprocess_flowcell.albacore.kit_id": "SQK-RBK004",
+    
+    "preprocess_flowcell.align.genome_index": "test_data/Homo_sapiens.GRCh38.dna.primary_assembly.mmi"
 }
