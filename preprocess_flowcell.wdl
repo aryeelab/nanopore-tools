@@ -2,6 +2,11 @@ workflow preprocess_flowcell {
 
     # Run albacore to basecall and demultiplex
     call albacore
+    
+    # Remove reads with duplicate IDs
+    scatter (fastq_gz in albacore.fastq_gzs) { call deduplicate {input: fastq_gz = fastq_gz} }
+
+    
 
 }
 
@@ -39,6 +44,31 @@ task albacore {
         File sequence_summary = "albacore/sequencing_summary.txt"
         File configuration = "albacore/configuration.cfg"
         File pipeline_log = "albacore/pipeline.log"
-        Array[File] fastqs = glob("*.fq.gz")
+        Array[File] fastq_gzs = glob("*.fq.gz")
     }
+}
+
+task deduplicate {
+    File fastq_gz
+    String base = basename(fastq_gz, ".fq.gz")
+    String fastq = "${base}.fq"
+    String dedup_fastq = "${base}.dedup.fq"
+     
+    command <<<        
+        gunzip -c ${fastq_gz} > ${fastq}
+        
+        # Dummy dedup step.
+        cp ${fastq} ${dedup_fastq}
+        
+        gzip ${dedup_fastq}
+    >>>
+
+    runtime {
+        docker: "debian:stretch"
+    }
+    
+    output {
+        File dedup_fastq_gz = "${base}.dedup.fq.gz"
+    }    
+    
 }
