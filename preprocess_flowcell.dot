@@ -1,0 +1,21 @@
+digraph preprocess_flowcell {
+  compound=true;
+  "START" -> "basecall_and_demultiplex" [ label=" fast5" ]
+  "START" -> "call_methylation" [ label=" fast5, ref_genome" ]
+  "START" -> "align" [ label=" ref_genome" ]
+  "deduplicate" -> "align" [ xlabel=".dedup.fq.gz " ]
+  "deduplicate" -> "call_methylation" [ label=" .dedup.fq.gz" ]
+  "basecall_and_demultiplex" -> "call_methylation" [ xlabel=" sequence_summary " ]
+  "basecall_and_demultiplex" -> "scatter ([fq_gz])" [lhead=cluster_0,  label=" [.fq.gz]"]
+  "align" -> "call_methylation" [ label=" .bam, .bai" ]
+  "basecall_and_demultiplex"
+  
+subgraph cluster_0 {
+  "deduplicate" 
+  "align" 
+  "call_methylation"
+  "scatter ([fq_gz])" [shape=plaintext]
+}
+      
+}
+
