@@ -83,7 +83,8 @@ task align {
 
     command <<<
         minimap2 -ax map-ont -t 1 "${genome_index}" "${fastq_gz}" | samtools sort -o "${base}.bam";
-    >>>
+        samtools index "${base}.bam"
+    >>> 
 
     runtime {
         docker: "aryeelab/nanopore_minimap2"
@@ -91,6 +92,7 @@ task align {
     
     output {
         File bam = "${base}.bam"
+        File bai = "${base}.bam.bai"
     }       
     
 
