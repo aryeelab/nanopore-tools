@@ -17,6 +17,11 @@ brew install cromwell
 https://hub.docker.com/editions/community/docker-ce-desktop-mac
 
 
+# Preprocess Flowcell workflow
+
+![alt text](preprocess_flowcell.png "preprocess_flowcell.wdl DAG")
+
+
 ## Quick Start
 
 ```
@@ -39,8 +44,11 @@ You can use `womtool` (part of cromwell) to output a workflow graph in `.dot` fo
 womtool graph preprocess_flowcell.wdl > preprocess_flowcell.dot
 ```
 
-This graph can be edited if necessary, and then visualized with graphviz (`brew install graphviz`):
+This graph can be edited if necessary (such as to label edges with inputs/outputs), and then visualized with graphviz (`brew install graphviz`):
 
 ```
 dot preprocess_flowcell.dot -Tpng -o preprocess_flowcell.png
 ```
+
+The graph at the top of this page is produced in this way.
+
