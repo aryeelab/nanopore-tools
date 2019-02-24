@@ -30,3 +30,17 @@ e.g.
 ```
 docker run --rm -it aryeelab/nanopore_albacore
 ```
+
+## Visualizing the workflow graph
+
+You can use `womtool` (part of cromwell) to output a workflow graph in `.dot` format:
+
+```
+womtool graph preprocess_flowcell.wdl > preprocess_flowcell.dot
+```
+
+This graph can be edited if necessary, and then visualized with graphviz (`brew install graphviz`):
+
+```
+dot preprocess_flowcell.dot -Tpng -o preprocess_flowcell.png
+```
