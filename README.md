@@ -1,6 +1,6 @@
 # Oxford nanopore tools
 
-## Install dependencies
+## Installing dependencies
 
 - Install Homebrew
 
@@ -16,20 +16,16 @@ brew install cromwell
 
 https://hub.docker.com/editions/community/docker-ce-desktop-mac
 
+## Getting started
 
-# Preprocess Flowcell workflow
-
-![alt text](preprocess_flowcell.png "preprocess_flowcell.wdl DAG")
-
-
-## Quick Start
+### Quick Start
 
 ```
 cromwell run -i test_data/test-run-1.json preprocess_flowcell.wdl 
 ```
 
 
-## Testing within a docker image
+### Testing within a docker image
 
 e.g.
 ```
@@ -50,5 +46,10 @@ This graph can be edited if necessary (such as to label edges with inputs/output
 dot preprocess_flowcell.dot -Tpng -o preprocess_flowcell.png
 ```
 
-The graph at the top of this page is produced in this way.
+The workflow graph below is produced in this way.
+
+
+## Preprocess Flowcell workflow
+
+![alt text](preprocess_flowcell.png "preprocess_flowcell.wdl DAG")
 
