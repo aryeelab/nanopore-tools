@@ -4,5 +4,5 @@
     "preprocess_flowcell.albacore.flowcell_id": "FLO-MIN106",
     "preprocess_flowcell.albacore.kit_id": "SQK-RBK004",
     
-    "preprocess_flowcell.align.genome_index": "test_data/Homo_sapiens.GRCh38.dna.primary_assembly.mmi"
+    "preprocess_flowcell.align.genome_index": "test_data/test_genome.fa"
 }
