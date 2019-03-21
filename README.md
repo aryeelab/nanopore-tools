@@ -29,7 +29,7 @@ cromwell run -i test_data/test-run-1.json preprocess_flowcell.wdl
 
 e.g.
 ```
-docker run --rm -it aryeelab/nanopore_albacore
+docker run --rm -it aryeelab/guppy
 ```
 
 ## Visualizing the workflow graph
