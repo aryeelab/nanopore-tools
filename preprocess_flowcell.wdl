@@ -30,6 +30,7 @@ task basecall_and_demultiplex {
     File fast5_zip
     String flowcell_id
     String kit_id
+    Int min_qscore
     
     command <<<
         # Unzip fast5
@@ -37,28 +38,32 @@ task basecall_and_demultiplex {
         echo "Unzipping ${fast5_zip}"
         jar -xf ${fast5_zip}
         echo "Moving $fast5_path to `basename $fast5_path`"
-        mv $fast5_path .
+        mv $fast5_path /
 
-        read_fast5_basecaller.py -f  ${flowcell_id} -k ${kit_id} -t 1 -r -i  fast5 -o fastq -q 0 -s albacore
+        # Basecall
+        guppy_basecaller -r -i /fast5 -s guppy_basecaller -q 0 --flowcell ${flowcell_id} --kit ${kit_id} --cpu_threads_per_caller 2 --qscore_filtering --min_qscore ${min_qscore}
+        cat guppy_basecaller/guppy_basecaller_log* > guppy_basecaller.log
+        
+        # Demultiplex
+        guppy_barcoder -i guppy_basecaller/pass -s guppy_barcoder --barcode_kits ${kit_id}
 
-        barcodes=`ls albacore/workspace/pass`
+        barcodes="`cd guppy_barcoder && ls -d barcode0*`"
         for barcode in $barcodes;
         do
             fastq_gz=${run_id}__$barcode.fq.gz
             echo $fastq_gz
-            cat albacore/workspace/pass/$barcode/*.fastq | gzip -c > $fastq_gz
+            cat guppy_barcoder/$barcode/*.fastq | gzip -c > $fastq_gz
         done
         
     >>>
 
     runtime {
-        docker: "aryeelab/nanopore_albacore"
+        docker: "aryeelab/guppy"
     }
     
     output {
-        File sequence_summary = "albacore/sequencing_summary.txt"
-        File configuration = "albacore/configuration.cfg"
-        File pipeline_log = "albacore/pipeline.log"
+        File sequence_summary = "guppy_basecaller/sequencing_summary.txt"
+        File guppy_basecaller_log = "guppy_basecaller.log"
         Array[File] fastq_gzs = glob("*.fq.gz")
     }
 }

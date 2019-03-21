@@ -12,10 +12,6 @@ echo "Moving $fast5_path to `basename $fast5_path`"
 mv $fast5_path .
 
 
-# Albacore basecall and demultiplex
-source /apps/lab/aryee/pyenv/versions/nanopore/bin/activate
-read_fast5_basecaller.py -f  $flowcell -k $kit -t 1 -r -i  fast5 -o fastq -q 0 -s albacore
-
-
-  
-
+# Guppy basecall and demultiplex
+guppy_basecaller -r -i /fast5 -s guppy_basecaller -q 0 --flowcell $flowcell --kit $kit --cpu_threads_per_caller 2 --qscore_filtering --min_qscore 7
+guppy_barcoder -i guppy_basecaller/pass -s guppy_barcoder --barcode_kits ${kit} 

@@ -4,6 +4,6 @@
     "preprocess_flowcell.ref_genome": "test_data/test_genome.fa",
 
     "preprocess_flowcell.basecall_and_demultiplex.flowcell_id": "FLO-MIN106",
-    "preprocess_flowcell.basecall_and_demultiplex.kit_id": "SQK-RBK004"
-    
+    "preprocess_flowcell.basecall_and_demultiplex.kit_id": "SQK-RBK004",
+    "preprocess_flowcell.basecall_and_demultiplex.min_qscore": 7
 }
