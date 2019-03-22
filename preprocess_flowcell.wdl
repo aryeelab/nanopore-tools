@@ -21,8 +21,14 @@ workflow preprocess_flowcell {
                                         bam = align.bam,
                                         bai = align.bai,
                                         ref_genome = ref_genome}
-                              }
-
+    }
+    
+    call demux_sample_sheet {input: fastq_gzs = basecall_and_demultiplex.fastq_gzs,
+                                    dedup_fastq_gzs = deduplicate.dedup_fastq_gz,
+                                    bams = align.bam,
+                                    bais = align.bai,
+                                    methylation_calls = call_methylation.methylation_calls
+                            }                       
 }
 
 task basecall_and_demultiplex {
@@ -84,7 +90,7 @@ task deduplicate {
     >>>
 
     runtime {
-        docker: "debian:stretch"
+        docker: "aryeelab/nanopore_util"
     }
     
     output {
@@ -148,4 +154,31 @@ task call_methylation {
         File methylation_calls = "${base}.methylation_calls.tsv"
     } 
     
+}
+
+task demux_sample_sheet {
+    Array[String] fastq_gzs
+    Array[String] dedup_fastq_gzs
+    Array[String] bams
+    Array[String] bais
+    Array[String] methylation_calls
+ 
+    command <<<
+        echo fastq_gz ${sep=' ' fastq_gzs} >> samples_t.txt
+        echo dedup_fastq_gz ${sep=' ' dedup_fastq_gzs} >> samples_t.txt
+        echo bam ${sep=' ' bams} >> samples_t.txt
+        echo bai ${sep=' ' bais} >> samples_t.txt
+        echo methylation_calls ${sep=' ' methylation_calls} >> samples_t.txt
+        
+        cat samples_t.txt | rs -c' ' -C',' -T > samples.csv
+        /usr/local/bin/add_flowcell_and_barcode_columns.R samples.csv samples.csv
+    >>>   
+    
+    runtime {
+        docker: "aryeelab/nanopore_util"
+    }
+    
+    output {
+        File samples = "samples.csv"
+    } 
 }
