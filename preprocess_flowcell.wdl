@@ -21,13 +21,18 @@ workflow preprocess_flowcell {
                                         bam = align.bam,
                                         bai = align.bai,
                                         ref_genome = ref_genome}
+                                        
+       # Summarize methylation by read
+       call methylation_by_read {input: base_methylation_calls = call_methylation.methylation_calls}
+                                        
     }
     
     call demux_sample_sheet {input: fastq_gzs = basecall_and_demultiplex.fastq_gzs,
                                     dedup_fastq_gzs = deduplicate.dedup_fastq_gz,
                                     bams = align.bam,
                                     bais = align.bai,
-                                    methylation_calls = call_methylation.methylation_calls
+                                    methylation_calls = call_methylation.methylation_calls,
+                                    read_methylation_calls = methylation_by_read.read_methylation_calls
                             }                       
 }
 
@@ -156,12 +161,33 @@ task call_methylation {
     
 }
 
+task methylation_by_read {
+
+    File base_methylation_calls
+    String base = basename(base_methylation_calls, ".methylation_calls.tsv")
+
+    command <<<
+        cp ${base_methylation_calls} .
+        perl /usr/local/bin/methylation_by_read.pl `basename ${base_methylation_calls}`
+    >>>
+    
+    runtime {
+        docker: "aryeelab/nanopore_util"
+    }
+    
+    output {
+        File read_methylation_calls = "${base}.read-methylation-calls.tsv"
+    } 
+    
+}
+
 task demux_sample_sheet {
     Array[String] fastq_gzs
     Array[String] dedup_fastq_gzs
     Array[String] bams
     Array[String] bais
     Array[String] methylation_calls
+    Array[String] read_methylation_calls
  
     command <<<
         echo fastq_gz ${sep=' ' fastq_gzs} >> samples_t.txt
@@ -169,6 +195,8 @@ task demux_sample_sheet {
         echo bam ${sep=' ' bams} >> samples_t.txt
         echo bai ${sep=' ' bais} >> samples_t.txt
         echo methylation_calls ${sep=' ' methylation_calls} >> samples_t.txt
+        echo read_methylation_calls ${sep=' ' read_methylation_calls} >> samples_t.txt
+
         
         cat samples_t.txt | rs -c' ' -C',' -T > samples.csv
         /usr/local/bin/add_flowcell_and_barcode_columns.R samples.csv samples.csv
