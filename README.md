@@ -47,6 +47,9 @@ e.g.
 docker run --rm -it aryeelab/guppy
 ```
 
+### Run wdl in erisone with singularity
+java -jar -Dconfig.file=lsf.bash.conf /data/molpath/software/cromwell-39.jar run preprocess_flowcell_singularity.wdl -i test_data/test-run-1.json
+
 ## Visualizing the workflow graph
 
 You can use `womtool` (part of cromwell) to output a workflow graph in `.dot` format:
