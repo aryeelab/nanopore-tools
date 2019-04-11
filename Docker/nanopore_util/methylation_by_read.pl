@@ -47,6 +47,7 @@ sub postProcess{
         $call = "-" if($ratio >= -2.5 && $ratio <= 2.5);
         my $num_cg = $lines[9];
         $call = $call x $num_cg;
+	print "read is $read $call\n";
 
         ## read, strand and strand
         if(exists $result{$chr}{$strand}{$read}){
