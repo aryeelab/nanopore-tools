@@ -163,7 +163,7 @@ task methylation_by_read {
     String image_dir
 
     command <<<
-	Rscript /data/aryee/sowmya/ctc_nanopore/nanopore_tools/Docker/nanopore_util/methylation_by_read.R ${base_methylation_calls} ${base}.read-methylation-calls.tsv
+	Rscript /usr/local/bin/methylation_by_read.R ${base_methylation_calls} ${base}.read-methylation-calls.tsv
     >>>
    runtime {
         backend: "singularity"
@@ -194,12 +194,13 @@ task demux_sample_sheet {
 
         cat samples_t.txt | rs -c' ' -C',' -T > samples.csv 
         /usr/local/bin/add_flowcell_and_barcode_columns.R samples.csv samples.csv
-	cp samples.csv /data/aryee/sowmya/ctc_nanopore
-	cp ${sep=' ' read_methylation_calls} /data/aryee/sowmya/ctc_nanopore/final_output_dir/
+	#cp samples.csv /data/aryee/sowmya/ctc_nanopore
+	#cp ${sep=' ' read_methylation_calls} /data/aryee/sowmya/ctc_nanopore/final_output_dir/
     >>>
     runtime {
-        backend: "Local"
+        backend: "singularity"
         continueOnReturnCode: false
+        simg: "${image_dir}/nanopore_util.simg"
     }
     output {
         File samples = "samples.csv"
