@@ -192,7 +192,7 @@ task demux_sample_sheet {
         echo read_methylation_calls ${sep=' ' read_methylation_calls} >> samples_t.txt
 
 
-        cat samples_t.txt | rs -c' ' -C',' -T > samples.csv 
+        cat samples_t.txt | datamash --output-delimiter=',' -t ' ' transpose > samples.csv 
         /usr/local/bin/add_flowcell_and_barcode_columns.R samples.csv samples.csv
 	#cp samples.csv /data/aryee/sowmya/ctc_nanopore
 	#cp ${sep=' ' read_methylation_calls} /data/aryee/sowmya/ctc_nanopore/final_output_dir/
