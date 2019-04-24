@@ -58,11 +58,20 @@ task basecall_and_demultiplex {
 
 
 		barcodes="`cd guppy_barcoder && \ls -d barcode0*`"
-                for barcode in $barcodes;
-                do
-                        fastq_gz=${run_id}__$barcode.fq.gz
-                        echo $fastq_gz
+        	for barcode in $barcodes;
+        	do
+                    fastq_gz=${run_id}__$barcode.fq.gz
+                    echo "Processing $barcode"
+                    numlines=$(cat guppy_barcoder/$barcode/*.fastq | wc -l)
+                    if [[ $numlines  -ge 400 ]]
+                    then
                         cat guppy_barcoder/$barcode/*.fastq | gzip -c >  $fastq_gz
+                        echo "Wrote $numlines lines to $fastq_gz"
+                    fi
+                    if [[ $numlines -lt 400 ]]
+                        then
+                        echo "Skipping since there are only $numlines lines (i.e. less than 100 reads)"
+                    fi
                 done
 	 >>>
     runtime {
