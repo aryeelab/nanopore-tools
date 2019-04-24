@@ -1,11 +1,25 @@
 library(readr)
-library(readr)
+library(dplyr)
 library(stringr)
 
 
 infile <-commandArgs(TRUE)[1] #"/data/aryee/sowmya/ctc_nanopore/test-run-1__barcode06.dedup.methylation_calls.tsv"
 outfile_by_read <- commandArgs(TRUE)[2]
-input <- read_tsv(infile)
+input <- read_tsv(infile, col_types=
+    cols(
+      chromosome = col_character(),
+      strand = col_character(),
+      start = col_double(),
+      end = col_double(),
+      read_name = col_character(),
+      log_lik_ratio = col_double(),
+      log_lik_methylated = col_double(),
+      log_lik_unmethylated = col_double(),
+      num_calling_strands = col_double(),
+      num_motifs = col_double(),
+      sequence = col_character())
+    )
+
 
 if (nrow(input)==0) {
     message("Warning: No lines in the input file")
