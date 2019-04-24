@@ -1,6 +1,6 @@
-library(readr, lib.loc="/usr/local/lib/R/site-library")
-library(readr, lib.loc="/usr/local/lib/R/site-library")
-library(stringr, lib.loc="/usr/local/lib/R/site-library")
+library(readr)
+library(readr)
+library(stringr)
 
 
 infile <-commandArgs(TRUE)[1] #"/data/aryee/sowmya/ctc_nanopore/test-run-1__barcode06.dedup.methylation_calls.tsv"
