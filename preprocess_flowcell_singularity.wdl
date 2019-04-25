@@ -4,9 +4,10 @@ workflow preprocess_flowcell {
     String image_dir
     File fast5_zip
     File ref_genome
+    Int min_reads_per_barcode = 100
 
     # Basecall and demultiplex with albacore
-    call basecall_and_demultiplex {input: run_id = run_id, fast5_zip = fast5_zip, image_dir = image_dir}
+    call basecall_and_demultiplex {input: run_id = run_id, fast5_zip = fast5_zip, min_reads_per_barcode = min_reads_per_barcode, image_dir = image_dir}
 
     scatter (fastq_gz in basecall_and_demultiplex.fastq_gzs) {
     call removeReadsWithDuplicateID {input: fastq_gz = fastq_gz, image_dir = image_dir}
@@ -39,9 +40,10 @@ workflow preprocess_flowcell {
 task basecall_and_demultiplex {
 	String run_id
 	File fast5_zip
-    	String flowcell_id
-    	String kit_id
-    	Int min_qscore
+    String flowcell_id
+    String kit_id
+    Int min_qscore
+    Int min_reads_per_barcode
 	String image_dir
 
 	command <<<
@@ -63,14 +65,15 @@ task basecall_and_demultiplex {
                     fastq_gz=${run_id}__$barcode.fq.gz
                     echo "Processing $barcode"
                     numlines=$(cat guppy_barcoder/$barcode/*.fastq | wc -l)
-                    if [[ $numlines  -ge 400 ]]
+                    numreads=$((numlines/4))
+                    if [[ $numreads  -ge ${min_reads_per_barcode} ]]
                     then
                         cat guppy_barcoder/$barcode/*.fastq | gzip -c >  $fastq_gz
-                        echo "Wrote $numlines lines to $fastq_gz"
+                        echo "Wrote $numreads reads to $fastq_gz"
                     fi
-                    if [[ $numlines -lt 400 ]]
+                    if [[ $numreads -lt ${min_reads_per_barcode} ]]
                         then
-                        echo "Skipping since there are only $numlines lines (i.e. less than 100 reads)"
+                        echo "Skipping since there are only $numreads reads (i.e. less than the ${min_reads_per_barcode}) read cutoff"
                     fi
                 done
 	 >>>
