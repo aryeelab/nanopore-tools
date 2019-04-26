@@ -57,7 +57,7 @@ task basecall_and_demultiplex {
         	# Basecall
 		guppy_basecaller -r -i fast5 -s guppy_basecaller -q 0 --flowcell ${flowcell_id} --kit ${kit_id} --device ${device} --qscore_filtering --min_qscore ${min_qscore}
                 cat guppy_basecaller/guppy_basecaller_log* > guppy_basecaller.log
-		guppy_barcoder -i guppy_basecaller/pass -s guppy_barcoder --barcode_kits ${kit_id}
+		guppy_barcoder -i guppy_basecaller/pass -s guppy_barcoder
 
 
 		barcodes="`cd guppy_barcoder && \ls -d barcode0*`"
@@ -77,6 +77,7 @@ task basecall_and_demultiplex {
                         echo "Skipping since there are only $numreads reads (i.e. less than the ${min_reads_per_barcode}) read cutoff"
                     fi
                 done
+               
 	 >>>
     runtime {
         backend: "singularity"
