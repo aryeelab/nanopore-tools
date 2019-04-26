@@ -7,5 +7,5 @@ RUN yum install git wget tar zlib-devel -y
 RUN yum install java-1.7.0-openjdk-devel -y
 RUN git clone --recursive https://github.com/jts/nanopolish.git
 WORKDIR /nanopolish
-RUN git checkout v0.11.0 && make all
+RUN git checkout v0.11.1 && make all
 CMD ./nanopolish
