@@ -27,7 +27,8 @@ workflow preprocess_flowcell {
 
     }
 
-    call demux_sample_sheet {input: fastq_gzs = basecall_and_demultiplex.fastq_gzs,
+    call demux_sample_sheet {input: flowcell_id = flowcell_id,
+                                    fastq_gzs = basecall_and_demultiplex.fastq_gzs,
                                     bams = align.bam,
                                     bais = align.bai,
                                     methylation_calls = call_methylation.methylation_calls,
@@ -197,6 +198,7 @@ task methylation_by_read {
 }
 
 task demux_sample_sheet {
+    String flowcell_id 
     Array[File] fastq_gzs
     Array[String] bams
     Array[String] bais
@@ -214,8 +216,9 @@ task demux_sample_sheet {
 
         cat samples_t.txt | datamash --output-delimiter=',' -t ' ' transpose > samples.csv 
         /usr/local/bin/add_flowcell_and_barcode_columns.R samples.csv samples.csv
-	#cp samples.csv /data/aryee/sowmya/ctc_nanopore
-	#cp ${sep=' ' read_methylation_calls} /data/aryee/sowmya/ctc_nanopore/final_output_dir/
+        cp samples.csv "${flowcell_id}.samples.csv"
+    	#cp samples.csv /data/aryee/sowmya/ctc_nanopore
+	    #cp ${sep=' ' read_methylation_calls} /data/aryee/sowmya/ctc_nanopore/final_output_dir/
     >>>
     runtime {
         backend: "singularity"
@@ -223,7 +226,7 @@ task demux_sample_sheet {
         simg: "${image_dir}/nanopore_util.simg"
     }
     output {
-        File samples = "samples.csv"
+        File samples = "${flowcell_id}.samples.csv"
     }
 }
 
