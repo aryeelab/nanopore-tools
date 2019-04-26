@@ -42,6 +42,7 @@ task basecall_and_demultiplex {
 	File fast5_zip
     String flowcell_id
     String kit_id
+    String device = "auto"
     Int min_qscore
     Int min_reads_per_barcode
 	String image_dir
@@ -54,7 +55,7 @@ task basecall_and_demultiplex {
         	mv $fast5_path fast5
 
         	# Basecall
-		guppy_basecaller -r -i fast5 -s guppy_basecaller -q 0 --flowcell ${flowcell_id} --kit ${kit_id} --cpu_threads_per_caller 2 --qscore_filtering --min_qscore ${min_qscore}
+		guppy_basecaller -r -i fast5 -s guppy_basecaller -q 0 --flowcell ${flowcell_id} --kit ${kit_id} --device ${device} --qscore_filtering --min_qscore ${min_qscore}
                 cat guppy_basecaller/guppy_basecaller_log* > guppy_basecaller.log
 		guppy_barcoder -i guppy_basecaller/pass -s guppy_barcoder --barcode_kits ${kit_id}
 
@@ -80,7 +81,7 @@ task basecall_and_demultiplex {
     runtime {
         backend: "singularity"
         continueOnReturnCode: false
-        simg: "${image_dir}/guppy.simg"
+        simg: "${image_dir}/guppy-gpu.simg"
     }
     output {
         File sequence_summary = "guppy_basecaller/sequencing_summary.txt"
