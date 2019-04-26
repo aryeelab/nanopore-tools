@@ -168,7 +168,7 @@ task call_methylation {
     runtime {
         backend: "singularity"
         continueOnReturnCode: false
-        simg: "${image_dir}/nanopolish-v0.11.0.simg"
+        simg: "${image_dir}/nanopolish.simg"
     }
     output {
         File methylation_calls = "${base}.methylation_calls.tsv"
