@@ -1,5 +1,5 @@
 {
-    "preprocess_flowcell.run_id": "test-run-1",
+    "preprocess_flowcell.flowcell_id": "test-run-1",
     "preprocess_flowcell.fast5_zip": "test_data/test-run-1.zip",
     "preprocess_flowcell.ref_genome": "test_data/test_genome.fa",
     "preprocess_flowcell.image_dir": "/data/aryee/simg",

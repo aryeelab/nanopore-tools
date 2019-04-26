@@ -1,13 +1,13 @@
 workflow preprocess_flowcell {
 
-    String run_id
+    String flowcell_id
     String image_dir
     File fast5_zip
     File ref_genome
     Int min_reads_per_barcode = 100
 
     # Basecall and demultiplex with albacore
-    call basecall_and_demultiplex {input: run_id = run_id, fast5_zip = fast5_zip, min_reads_per_barcode = min_reads_per_barcode, image_dir = image_dir}
+    call basecall_and_demultiplex {input: flowcell_id = flowcell_id, fast5_zip = fast5_zip, min_reads_per_barcode = min_reads_per_barcode, image_dir = image_dir}
 
     scatter (fastq_gz in basecall_and_demultiplex.fastq_gzs) {
     call removeReadsWithDuplicateID {input: fastq_gz = fastq_gz, image_dir = image_dir}
@@ -38,7 +38,7 @@ workflow preprocess_flowcell {
 }
 
 task basecall_and_demultiplex {
-	String run_id
+	String flowcell_id
 	File fast5_zip
     String flowcell_id
     String kit_id
@@ -63,7 +63,7 @@ task basecall_and_demultiplex {
 		barcodes="`cd guppy_barcoder && \ls -d barcode0*`"
         	for barcode in $barcodes;
         	do
-                    fastq_gz=${run_id}__$barcode.fq.gz
+                    fastq_gz=${flowcell_id}__$barcode.fq.gz
                     echo "Processing $barcode"
                     numlines=$(cat guppy_barcoder/$barcode/*.fastq | wc -l)
                     numreads=$((numlines/4))
