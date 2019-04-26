@@ -77,7 +77,13 @@ task basecall_and_demultiplex {
                         echo "Skipping since there are only $numreads reads (i.e. less than the ${min_reads_per_barcode}) read cutoff"
                     fi
                 done
-               
+
+                # Exit with error if no barcodes are detected
+                num_barcodes=$(echo -n $barcodes | wc -m)
+                if [ $num_barcodes -eq 0 ]
+                then
+                    exit 1
+                fi               
 	 >>>
     runtime {
         backend: "singularity"
