@@ -41,7 +41,7 @@ workflow preprocess_flowcell {
 task basecall_and_demultiplex {
 	String flowcell_id
 	File fast5_zip
-    String flowcell_id
+    String flowcell_type_id
     String kit_id
     String device = "auto"
     Int min_qscore
@@ -56,7 +56,7 @@ task basecall_and_demultiplex {
         	mv $fast5_path fast5
 
         	# Basecall
-		guppy_basecaller -r -i fast5 -s guppy_basecaller -q 0 --flowcell ${flowcell_id} --kit ${kit_id} --device ${device} --qscore_filtering --min_qscore ${min_qscore}
+		guppy_basecaller -r -i fast5 -s guppy_basecaller -q 0 --flowcell ${flowcell_type_id} --kit ${kit_id} --device ${device} --qscore_filtering --min_qscore ${min_qscore}
                 cat guppy_basecaller/guppy_basecaller_log* > guppy_basecaller.log
 		guppy_barcoder -i guppy_basecaller/pass -s guppy_barcoder
 
