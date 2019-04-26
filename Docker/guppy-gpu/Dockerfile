@@ -12,10 +12,11 @@ RUN apt-get update && apt-get install -y libcurl4-openssl-dev \
                                          libboost-regex1.58.0 \
                                          libboost-system1.58.0 \
                                          libboost-log1.58.0 \
-                                         wget
+                                         wget \
+                                         default-jdk
 
 RUN cd /tmp &&\
-    wget -q https://mirror.oxfordnanoportal.com/software/analysis/ont_guppy_2.2.2-1~xenial_amd64.deb &&\
-    dpkg -i --ignore-depends=nvidia-384,libcuda1-384 /tmp/ont_guppy_2.2.2-1~xenial_amd64.deb
+    wget -q https://mirror.oxfordnanoportal.com/software/analysis/ont_guppy_2.3.7-1~xenial_amd64.deb &&\
+    dpkg -i --ignore-depends=nvidia-384,libcuda1-384 /tmp/ont_guppy_2.3.7-1~xenial_amd64.deb
 
 
