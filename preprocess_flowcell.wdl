@@ -85,6 +85,7 @@ task basecall_and_demultiplex {
     runtime {
         continueOnReturnCode: false
         docker: "${if gpu then 'quay.io/aryeelab/guppy-gpu' else 'quay.io/aryeelab/guppy-cpu'}"
+        simg: "${if gpu then 'guppy-gpu.simg' else 'guppy-cpu.simg'}"
     }
     output {
         File sequence_summary = "guppy_basecaller/sequencing_summary.txt"
@@ -112,6 +113,7 @@ task removeReadsWithDuplicateID {
     runtime {
         continueOnReturnCode: false
         docker: "quay.io/aryeelab/nanopore_util"
+        simg: "nanopore_util.simg"
     }
     
     output {
@@ -134,6 +136,7 @@ task align {
     runtime {
         continueOnReturnCode: false
         docker: "quay.io/aryeelab/minimap2"
+        simg: "minimap2.simg"
     } 
        
     output {
@@ -165,6 +168,7 @@ task call_methylation {
     runtime {
         continueOnReturnCode: false
         docker: "quay.io/aryeelab/nanopolish"
+        simg: "nanopolish.simg"
     }
     
     output {
@@ -185,6 +189,7 @@ task methylation_by_read {
    runtime {
         continueOnReturnCode: false
         docker: "quay.io/aryeelab/nanopore_util"
+        simg: "nanopore_util.simg"
     }
     
    output {
@@ -219,6 +224,7 @@ task demux_sample_sheet {
     runtime {
         continueOnReturnCode: false
         docker: "quay.io/aryeelab/nanopore_util"
+        simg: "nanopore_util.simg"
     }
     
     output {
