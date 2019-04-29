@@ -112,8 +112,8 @@ task removeReadsWithDuplicateID {
 	
     runtime {
         continueOnReturnCode: false
-        docker: "quay.io/aryeelab/nanopore_util"
-        simg: "nanopore_util.simg"
+        docker: "quay.io/aryeelab/nanopore-util"
+        simg: "nanopore-util.simg"
     }
     
     output {
@@ -188,8 +188,8 @@ task methylation_by_read {
     
    runtime {
         continueOnReturnCode: false
-        docker: "quay.io/aryeelab/nanopore_util"
-        simg: "nanopore_util.simg"
+        docker: "quay.io/aryeelab/nanopore-util"
+        simg: "nanopore-util.simg"
     }
     
    output {
@@ -223,8 +223,8 @@ task demux_sample_sheet {
     
     runtime {
         continueOnReturnCode: false
-        docker: "quay.io/aryeelab/nanopore_util"
-        simg: "nanopore_util.simg"
+        docker: "quay.io/aryeelab/nanopore-util"
+        simg: "nanopore-util.simg"
     }
     
     output {
