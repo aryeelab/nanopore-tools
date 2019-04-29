@@ -42,7 +42,7 @@ task basecall_and_demultiplex {
     String device = "auto"
     Int min_qscore
     Int min_reads_per_barcode
-    Boolean gpu = false
+    Boolean gpu = true
 
 	command <<<
 		fast5_path=`jar tf ${fast5_zip} | grep 'fast5/$'` # find path to fast5 dir within zip
