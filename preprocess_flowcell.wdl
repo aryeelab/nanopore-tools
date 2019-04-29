@@ -42,7 +42,7 @@ task basecall_and_demultiplex {
     String device = "auto"
     Int min_qscore
     Int min_reads_per_barcode
-
+    Boolean gpu = false
 
 	command <<<
 		fast5_path=`jar tf ${fast5_zip} | grep 'fast5/$'` # find path to fast5 dir within zip
@@ -52,7 +52,8 @@ task basecall_and_demultiplex {
         mv $fast5_path fast5
 
         # Basecall
-		guppy_basecaller -r -i fast5 -s guppy_basecaller -q 0 --flowcell ${flowcell_type_id} --kit ${kit_id} --device ${device} --qscore_filtering --min_qscore ${min_qscore}
+		guppy_basecaller -r -i fast5 -s guppy_basecaller -q 0 --flowcell ${flowcell_type_id} --kit ${kit_id} --qscore_filtering --min_qscore ${min_qscore} ${if gpu then '--device' else ''} ${if gpu then device else ''} 
+		    
         cat guppy_basecaller/guppy_basecaller_log* > guppy_basecaller.log
 		guppy_barcoder -i guppy_basecaller/pass -s guppy_barcoder
 
@@ -83,7 +84,7 @@ task basecall_and_demultiplex {
 	 >>>
     runtime {
         continueOnReturnCode: false
-        docker: "quay.io/aryeelab/guppy-gpu"
+        docker: "${if gpu then 'quay.io/aryeelab/guppy-gpu' else 'quay.io/aryeelab/guppy-cpu'}"
     }
     output {
         File sequence_summary = "guppy_basecaller/sequencing_summary.txt"
@@ -183,7 +184,7 @@ task methylation_by_read {
     
    runtime {
         continueOnReturnCode: false
-        docker: "quay.io/aryeelab/nanopore_util."
+        docker: "quay.io/aryeelab/nanopore_util"
     }
     
    output {
