@@ -43,6 +43,7 @@ task basecall_and_demultiplex {
     Int min_qscore
     Int min_reads_per_barcode
     Boolean gpu = true
+    Int disk_size = ceil(size(fast5_zip, "GB") * 10 + 20
 
 	command <<<
 		fast5_path=`jar tf ${fast5_zip} | grep 'fast5/$'` # find path to fast5 dir within zip
@@ -85,6 +86,9 @@ task basecall_and_demultiplex {
     runtime {
         continueOnReturnCode: false
         docker: "${if gpu then 'quay.io/aryeelab/guppy-gpu' else 'quay.io/aryeelab/guppy-cpu'}"
+        disks: "local-disk ${disk_size} HDD"
+        gpuType: "nvidia-tesla-k80"
+        gpuCount: 1
         simg: "${if gpu then 'guppy-gpu.simg' else 'guppy-cpu.simg'}"
     }
     output {
@@ -101,6 +105,7 @@ task removeReadsWithDuplicateID {
     String base = basename(fastq_gz, ".fq.gz")
     String fastq = "${base}.fq"
     String dedup_fastq = "${base}.dedup.fq"
+    Int disk_size = ceil(size(fastq_gz, "GB") * 3 + 20
 
     command <<<
 		zcat ${fastq_gz} | \
@@ -113,6 +118,7 @@ task removeReadsWithDuplicateID {
     runtime {
         continueOnReturnCode: false
         docker: "quay.io/aryeelab/nanopore-util"
+        disks: "local-disk ${disk_size} HDD"
         simg: "nanopore-util.simg"
     }
     
@@ -123,10 +129,10 @@ task removeReadsWithDuplicateID {
 
 
 task align {
-
     File fastq_gz
     File ref_genome
     String base = basename(fastq_gz, ".fq.gz")
+    Int disk_size = ceil(size(fastq_gz, "GB") * 3 + 20
 
     command <<<
         minimap2 -ax map-ont -t 1 ${ref_genome} ${fastq_gz} | samtools sort -o ${base}.bam
@@ -136,6 +142,7 @@ task align {
     runtime {
         continueOnReturnCode: false
         docker: "quay.io/aryeelab/minimap2"
+        disks: "local-disk ${disk_size} HDD"
         simg: "minimap2.simg"
     } 
        
@@ -154,6 +161,7 @@ task call_methylation {
     File bai
     File ref_genome
     String base = basename(fastq_gz, ".fq.gz")
+    Int disk_size = ceil(size(fast5_zip, "GB") + ceil(size(fastq_gz, "GB") * 2 + 20
 
     command <<<
         # Unzip fast5
@@ -168,6 +176,7 @@ task call_methylation {
     runtime {
         continueOnReturnCode: false
         docker: "quay.io/aryeelab/nanopolish"
+        disks: "local-disk ${disk_size} HDD"
         simg: "nanopolish.simg"
     }
     
@@ -181,6 +190,7 @@ task methylation_by_read {
 
     File base_methylation_calls
     String base = basename(base_methylation_calls, ".methylation_calls.tsv")
+    Int disk_size = ceil(size(base_methylation_calls, "GB") * 2 + 20
 
     command <<<
         Rscript /usr/local/bin/methylation_by_read.R ${base_methylation_calls} ${base}.read-methylation-calls.tsv
@@ -189,6 +199,7 @@ task methylation_by_read {
    runtime {
         continueOnReturnCode: false
         docker: "quay.io/aryeelab/nanopore-util"
+        disks: "local-disk ${disk_size} HDD"
         simg: "nanopore-util.simg"
     }
     
