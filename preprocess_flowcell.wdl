@@ -5,8 +5,11 @@ workflow preprocess_flowcell {
     File ref_genome
     Int min_reads_per_barcode = 100
 
+    Int disk_size = ceil(size(fast5_zip, "GB")) * 10 + 20
+
+
     # Basecall and demultiplex with albacore
-    call basecall_and_demultiplex {input: flowcell_id = flowcell_id, fast5_zip = fast5_zip, min_reads_per_barcode = min_reads_per_barcode}
+    call basecall_and_demultiplex {input: flowcell_id = flowcell_id, fast5_zip = fast5_zip, min_reads_per_barcode = min_reads_per_barcode, disk_size = disk_size}
 
     scatter (fastq_gz in basecall_and_demultiplex.fastq_gzs) {
     call removeReadsWithDuplicateID {input: fastq_gz = fastq_gz}
@@ -18,7 +21,8 @@ workflow preprocess_flowcell {
                                     fastq_gz = removeReadsWithDuplicateID.dedup_fastq_gz,
                                     bam = align.bam,
                                     bai = align.bai,
-                                    ref_genome = ref_genome}
+                                    ref_genome = ref_genome,
+                                    disk_size = disk_size}
 
      # Summarize methylation by read
      call methylation_by_read {input: base_methylation_calls = call_methylation.methylation_calls}
@@ -43,7 +47,7 @@ task basecall_and_demultiplex {
     Int min_qscore
     Int min_reads_per_barcode
     Boolean gpu = true
-    Int disk_size = ceil(size(fast5_zip, "GB") * 10 + 20
+    Int disk_size
 
 	command <<<
 		fast5_path=`jar tf ${fast5_zip} | grep 'fast5/$'` # find path to fast5 dir within zip
@@ -105,7 +109,7 @@ task removeReadsWithDuplicateID {
     String base = basename(fastq_gz, ".fq.gz")
     String fastq = "${base}.fq"
     String dedup_fastq = "${base}.dedup.fq"
-    Int disk_size = ceil(size(fastq_gz, "GB") * 3 + 20
+    Int disk_size = ceil(size(fastq_gz, "GB")) * 3 + 20
 
     command <<<
 		zcat ${fastq_gz} | \
@@ -132,7 +136,7 @@ task align {
     File fastq_gz
     File ref_genome
     String base = basename(fastq_gz, ".fq.gz")
-    Int disk_size = ceil(size(fastq_gz, "GB") * 3 + 20
+    Int disk_size = ceil(size(fastq_gz, "GB")) * 3 + 20
 
     command <<<
         minimap2 -ax map-ont -t 1 ${ref_genome} ${fastq_gz} | samtools sort -o ${base}.bam
@@ -161,7 +165,7 @@ task call_methylation {
     File bai
     File ref_genome
     String base = basename(fastq_gz, ".fq.gz")
-    Int disk_size = ceil(size(fast5_zip, "GB") + ceil(size(fastq_gz, "GB") * 2 + 20
+    Int disk_size 
 
     command <<<
         # Unzip fast5
@@ -190,7 +194,7 @@ task methylation_by_read {
 
     File base_methylation_calls
     String base = basename(base_methylation_calls, ".methylation_calls.tsv")
-    Int disk_size = ceil(size(base_methylation_calls, "GB") * 2 + 20
+    Int disk_size = ceil(size(base_methylation_calls, "GB")) * 2 + 20
 
     command <<<
         Rscript /usr/local/bin/methylation_by_read.R ${base_methylation_calls} ${base}.read-methylation-calls.tsv
