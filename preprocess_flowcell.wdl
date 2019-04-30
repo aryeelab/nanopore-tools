@@ -93,6 +93,7 @@ task basecall_and_demultiplex {
         disks: "local-disk ${disk_size} HDD"
         gpuType: "nvidia-tesla-k80"
         gpuCount: 1
+        zones: "us-central1-c"
         simg: "${if gpu then 'guppy-gpu.simg' else 'guppy-cpu.simg'}"
     }
     output {
