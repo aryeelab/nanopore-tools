@@ -217,7 +217,7 @@ task methylation_by_read {
 
 task demux_sample_sheet {
     String flowcell_id 
-    Array[File] fastq_gzs
+    Array[String] fastq_gzs
     Array[String] bams
     Array[String] bais
     Array[String] methylation_calls
