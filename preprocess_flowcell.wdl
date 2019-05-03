@@ -90,6 +90,7 @@ task basecall_and_demultiplex {
     runtime {
         continueOnReturnCode: false
         docker: "${if gpu then 'quay.io/aryeelab/guppy-gpu' else 'quay.io/aryeelab/guppy-cpu'}"
+        bootDiskSizeGb: 10
         disks: "local-disk ${disk_size} HDD"
         gpuType: "nvidia-tesla-k80"
         gpuCount: 1
