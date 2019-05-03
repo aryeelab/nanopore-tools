@@ -1,5 +1,6 @@
 workflow preprocess_flowcell {
 
+    String version = "dev"
     String flowcell_id
     File fast5_zip
     File ref_genome
@@ -9,24 +10,28 @@ workflow preprocess_flowcell {
 
 
     # Basecall and demultiplex with albacore
-    call basecall_and_demultiplex {input: flowcell_id = flowcell_id, fast5_zip = fast5_zip, min_reads_per_barcode = min_reads_per_barcode, disk_size = disk_size}
+    call basecall_and_demultiplex {input:   flowcell_id = flowcell_id, 
+                                            fast5_zip = fast5_zip, 
+                                            min_reads_per_barcode = min_reads_per_barcode, 
+                                            disk_size = disk_size,
+                                            version = version}
 
     scatter (fastq_gz in basecall_and_demultiplex.fastq_gzs) {
-    call removeReadsWithDuplicateID {input: fastq_gz = fastq_gz}
-    # Align with minimap2
-    call align {input: fastq_gz = removeReadsWithDuplicateID.dedup_fastq_gz, ref_genome = ref_genome}
-    # Call methylation with Nanopolish
-    call call_methylation {input:   fast5_zip = fast5_zip,
-                                    sequence_summary = basecall_and_demultiplex.sequence_summary,
-                                    fastq_gz = removeReadsWithDuplicateID.dedup_fastq_gz,
-                                    bam = align.bam,
-                                    bai = align.bai,
-                                    ref_genome = ref_genome,
-                                    disk_size = disk_size}
+        call removeReadsWithDuplicateID {input: fastq_gz = fastq_gz, version = version}
+        # Align with minimap2
+        call align {input: fastq_gz = removeReadsWithDuplicateID.dedup_fastq_gz, ref_genome = ref_genome, version = version}
+        # Call methylation with Nanopolish
+        call call_methylation {input:   fast5_zip = fast5_zip,
+                                        sequence_summary = basecall_and_demultiplex.sequence_summary,
+                                        fastq_gz = removeReadsWithDuplicateID.dedup_fastq_gz,
+                                        bam = align.bam,
+                                        bai = align.bai,
+                                        ref_genome = ref_genome,
+                                        disk_size = disk_size,
+                                        version = version}
 
-     # Summarize methylation by read
-     call methylation_by_read {input: base_methylation_calls = call_methylation.methylation_calls}
-
+         # Summarize methylation by read
+         call methylation_by_read {input: base_methylation_calls = call_methylation.methylation_calls, version = version}
     }
 
     call demux_sample_sheet {input: flowcell_id = flowcell_id,
@@ -34,11 +39,13 @@ workflow preprocess_flowcell {
                                     bams = align.bam,
                                     bais = align.bai,
                                     methylation_calls = call_methylation.methylation_calls,
-                                    read_methylation_calls = methylation_by_read.read_methylation_calls}
+                                    read_methylation_calls = methylation_by_read.read_methylation_calls,
+                                    version = version}
     
 }
 
 task basecall_and_demultiplex {
+    String version
 	String flowcell_id
 	File fast5_zip
     String flowcell_type_id
@@ -89,7 +96,7 @@ task basecall_and_demultiplex {
 	 >>>
     runtime {
         continueOnReturnCode: false
-        docker: "${if gpu then 'quay.io/aryeelab/guppy-gpu' else 'quay.io/aryeelab/guppy-cpu'}"
+        docker: if gpu then "quay.io/aryeelab/guppy-gpu:${version}" else "quay.io/aryeelab/guppy-cpu:${version}"
         bootDiskSizeGb: 20
         disks: "local-disk ${disk_size} HDD"
         gpuType: "nvidia-tesla-p100"
@@ -107,6 +114,7 @@ task basecall_and_demultiplex {
 
 
 task removeReadsWithDuplicateID {
+    String version
     File fastq_gz
     String base = basename(fastq_gz, ".fq.gz")
     String fastq = "${base}.fq"
@@ -123,7 +131,7 @@ task removeReadsWithDuplicateID {
 	
     runtime {
         continueOnReturnCode: false
-        docker: "quay.io/aryeelab/nanopore-util"
+        docker: "quay.io/aryeelab/nanopore-util:${version}"
         disks: "local-disk ${disk_size} HDD"
         simg: "nanopore-util.simg"
     }
@@ -135,6 +143,7 @@ task removeReadsWithDuplicateID {
 
 
 task align {
+    String version
     File fastq_gz
     File ref_genome
     String base = basename(fastq_gz, ".fq.gz")
@@ -147,7 +156,7 @@ task align {
     
     runtime {
         continueOnReturnCode: false
-        docker: "quay.io/aryeelab/minimap2"
+        docker: "quay.io/aryeelab/minimap2:${version}"
         disks: "local-disk ${disk_size} HDD"
         simg: "minimap2.simg"
     } 
@@ -159,7 +168,7 @@ task align {
 }
 
 task call_methylation {
-
+    String version
     File fast5_zip
     File sequence_summary
     File fastq_gz
@@ -181,7 +190,7 @@ task call_methylation {
     
     runtime {
         continueOnReturnCode: false
-        docker: "quay.io/aryeelab/nanopolish"
+        docker: "quay.io/aryeelab/nanopolish:${version}"
         disks: "local-disk ${disk_size} HDD"
         simg: "nanopolish.simg"
     }
@@ -193,7 +202,7 @@ task call_methylation {
 }
 
 task methylation_by_read {
-
+    String version
     File base_methylation_calls
     String base = basename(base_methylation_calls, ".methylation_calls.tsv")
     Int disk_size = ceil(size(base_methylation_calls, "GB")) * 2 + 20
@@ -204,7 +213,7 @@ task methylation_by_read {
     
    runtime {
         continueOnReturnCode: false
-        docker: "quay.io/aryeelab/nanopore-util"
+        docker: "quay.io/aryeelab/nanopore-util:${version}"
         disks: "local-disk ${disk_size} HDD"
         simg: "nanopore-util.simg"
     }
@@ -216,6 +225,7 @@ task methylation_by_read {
 }
 
 task demux_sample_sheet {
+    String version
     String flowcell_id 
     Array[String] fastq_gzs
     Array[String] bams
@@ -240,7 +250,7 @@ task demux_sample_sheet {
     
     runtime {
         continueOnReturnCode: false
-        docker: "quay.io/aryeelab/nanopore-util"
+        docker: "quay.io/aryeelab/nanopore-util:${version}"
         simg: "nanopore-util.simg"
     }
     
