@@ -1,6 +1,6 @@
 workflow preprocess_flowcell {
 
-    String version = "dev"
+    String version = "v0.2"
     String flowcell_id
     File fast5_zip
     File ref_genome
