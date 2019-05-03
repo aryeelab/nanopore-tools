@@ -92,7 +92,7 @@ task basecall_and_demultiplex {
         docker: "${if gpu then 'quay.io/aryeelab/guppy-gpu' else 'quay.io/aryeelab/guppy-cpu'}"
         bootDiskSizeGb: 20
         disks: "local-disk ${disk_size} HDD"
-        gpuType: "nvidia-tesla-k80"
+        gpuType: "nvidia-tesla-p100"
         gpuCount: 1
         zones: "us-central1-c"
         simg: "${if gpu then 'guppy-gpu.simg' else 'guppy-cpu.simg'}"
