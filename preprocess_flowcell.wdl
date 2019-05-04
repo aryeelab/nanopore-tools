@@ -17,13 +17,13 @@ workflow preprocess_flowcell {
                                             version = version}
 
     scatter (fastq_gz in basecall_and_demultiplex.fastq_gzs) {
-        call removeReadsWithDuplicateID {input: fastq_gz = fastq_gz, version = version}
+        #call removeReadsWithDuplicateID {input: fastq_gz = fastq_gz, version = version}
         # Align with minimap2
-        call align {input: fastq_gz = removeReadsWithDuplicateID.dedup_fastq_gz, ref_genome = ref_genome, version = version}
+        call align {input: fastq_gz = fastq_gz, ref_genome = ref_genome, version = version}
         # Call methylation with Nanopolish
         call call_methylation {input:   fast5_zip = fast5_zip,
                                         sequence_summary = basecall_and_demultiplex.sequence_summary,
-                                        fastq_gz = removeReadsWithDuplicateID.dedup_fastq_gz,
+                                        fastq_gz = fastq_gz,
                                         bam = align.bam,
                                         bai = align.bai,
                                         ref_genome = ref_genome,
