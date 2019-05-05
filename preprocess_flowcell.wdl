@@ -112,6 +112,7 @@ task basecall_and_demultiplex {
         gpuType: "nvidia-tesla-p100"
         gpuCount: 1
         zones: "us-central1-c"
+        preemptible: 1
         simg: "${if gpu then 'guppy-gpu.simg' else 'guppy-cpu.simg'}"
     }
     output {
@@ -202,6 +203,7 @@ task call_methylation {
         continueOnReturnCode: false
         docker: "quay.io/aryeelab/nanopolish:${version}"
         disks: "local-disk ${disk_size} HDD"
+        preemptible: 1
         simg: "nanopolish.simg"
     }
     
