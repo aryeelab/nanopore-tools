@@ -132,7 +132,7 @@ task removeReadsWithDuplicateID {
 		zcat ${fastq_gz} | \
 		awk '{ if (NR % 4 == 0) {printf("%s\n",$0)} else {printf("%s\t",$0) } }' | \
 		awk '!seen[$0]++' | \
-		sed 's/\t/\r\n/g' | \
+		sed 's/\t/\n/g' | \
 		gzip > ${base}.dedup.fq.gz
 	>>>
 	
