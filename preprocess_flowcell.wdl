@@ -42,6 +42,13 @@ workflow preprocess_flowcell {
                                     read_methylation_calls = methylation_by_read.read_methylation_calls,
                                     version = version}
     
+    output {
+        File guppy_basecaller_log = basecall_and_demultiplex.guppy_basecaller_log
+        File sequence_summary = basecall_and_demultiplex.sequence_summary
+        File sample_sheet = demux_sample_sheet.samples
+        String pipeline_version = "${version}"
+    }
+
 }
 
 task basecall_and_demultiplex {
@@ -258,4 +265,3 @@ task demux_sample_sheet {
         File samples = "${flowcell_id}.samples.csv"
     }
 }
-
