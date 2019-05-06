@@ -168,6 +168,7 @@ task align {
     runtime {
         continueOnReturnCode: false
         docker: "quay.io/aryeelab/minimap2:${version}"
+        memory: "30GB"
         disks: "local-disk ${disk_size} HDD"
         simg: "minimap2.simg"
     } 
