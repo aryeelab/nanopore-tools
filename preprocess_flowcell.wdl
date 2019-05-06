@@ -143,6 +143,7 @@ task removeReadsWithDuplicateID {
     runtime {
         continueOnReturnCode: false
         docker: "quay.io/aryeelab/nanopore-util:${version}"
+        memory: "15GB"
         disks: "local-disk ${disk_size} HDD"
         simg: "nanopore-util.simg"
     }
