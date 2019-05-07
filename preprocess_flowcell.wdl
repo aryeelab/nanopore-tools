@@ -1,6 +1,7 @@
 workflow preprocess_flowcell {
 
     String version = "dev"
+    File monitoring_script = "https://storage.cloud.google.com/aryeelab/scripts/monitor_v2.sh"
     String flowcell_id
     File fast5_zip
     File ref_genome
@@ -14,13 +15,17 @@ workflow preprocess_flowcell {
                                             fast5_zip = fast5_zip, 
                                             min_reads_per_barcode = min_reads_per_barcode, 
                                             disk_size = disk_size,
-                                            version = version}
+                                            version = version,
+                                            monitoring_script = monitoring_script}
 
     scatter (fastq_gz in basecall_and_demultiplex.fastq_gzs) {
         call removeReadsWithDuplicateID {input: fastq_gz = fastq_gz, version = version}
         
         # Align with minimap2
-        call align {input: fastq_gz = removeReadsWithDuplicateID.dedup_fastq_gz, ref_genome = ref_genome, version = version}
+        call align {input: fastq_gz = removeReadsWithDuplicateID.dedup_fastq_gz, 
+                           ref_genome = ref_genome, 
+                           version = version,
+                           monitoring_script = monitoring_script}
         
         # Call methylation with Nanopolish
         call call_methylation {input:   fast5_zip = fast5_zip,
@@ -30,10 +35,13 @@ workflow preprocess_flowcell {
                                         bai = align.bai,
                                         ref_genome = ref_genome,
                                         disk_size = disk_size,
-                                        version = version}
+                                        version = version,
+                                        monitoring_script = monitoring_script}
 
          # Summarize methylation by read
-         call methylation_by_read {input: base_methylation_calls = call_methylation.methylation_calls, version = version}
+         call methylation_by_read {input: base_methylation_calls = call_methylation.methylation_calls, 
+                                          version = version,
+                                          monitoring_script = monitoring_script}
     }
 
     call demux_sample_sheet {input: flowcell_id = flowcell_id,
@@ -65,8 +73,12 @@ task basecall_and_demultiplex {
     Int min_reads_per_barcode
     Boolean gpu = true
     Int disk_size
+    File monitoring_script
 
 	command <<<
+    	chmod u+x ${monitoring_script}
+        ${monitoring_script} > monitoring.log &
+	
 		fast5_path=`jar tf ${fast5_zip} | grep 'fast5/$'` # find path to fast5 dir within zip
         echo "Unzipping ${fast5_zip}"
         jar -xf ${fast5_zip}
@@ -119,6 +131,7 @@ task basecall_and_demultiplex {
         File sequence_summary = "guppy_basecaller/sequencing_summary.txt"
         File guppy_basecaller_log = "guppy_basecaller.log"
         Array[File] fastq_gzs = glob("*.fq.gz")
+        File monitoring_log = "monitoring.log"
     }
 	
 }
@@ -160,8 +173,12 @@ task align {
     File ref_genome
     String base = basename(fastq_gz, ".fq.gz")
     Int disk_size = ceil(size(fastq_gz, "GB")) * 3 + 20
+    File monitoring_script
 
     command <<<
+        chmod u+x ${monitoring_script}
+        ${monitoring_script} > monitoring.log &
+        
         minimap2 -ax map-ont -t 1 ${ref_genome} ${fastq_gz} | samtools sort -o ${base}.bam
         samtools index ${base}.bam    
     >>>
@@ -177,6 +194,7 @@ task align {
     output {
         File bam = "${base}.bam"
         File bai = "${base}.bam.bai"
+        File monitoring_log = "monitoring.log"
     }
 }
 
@@ -190,8 +208,12 @@ task call_methylation {
     File ref_genome
     String base = basename(fastq_gz, ".fq.gz")
     Int disk_size 
+    File monitoring_script
 
     command <<<
+        chmod u+x ${monitoring_script}
+        ${monitoring_script} > monitoring.log &
+    
         # Unzip fast5
         fast5_path=`jar tf ${fast5_zip} | grep 'fast5/$'` # find path to fast5 dir within zip
         echo "Unzipping ${fast5_zip}"
@@ -212,6 +234,7 @@ task call_methylation {
     
     output {
         File methylation_calls = "${base}.methylation_calls.tsv"
+        File monitoring_log = "monitoring.log"
     }
 
 }
@@ -221,8 +244,12 @@ task methylation_by_read {
     File base_methylation_calls
     String base = basename(base_methylation_calls, ".methylation_calls.tsv")
     Int disk_size = ceil(size(base_methylation_calls, "GB")) * 2 + 20
+    File monitoring_script
 
     command <<<
+        chmod u+x ${monitoring_script}
+        ${monitoring_script} > monitoring.log &
+    
         Rscript /usr/local/bin/methylation_by_read.R ${base_methylation_calls} ${base}.read-methylation-calls.tsv
     >>>
     
@@ -235,6 +262,7 @@ task methylation_by_read {
     
    output {
         File read_methylation_calls = "${base}.read-methylation-calls.tsv"
+        File monitoring_log = "monitoring.log"
     }
 
 }
