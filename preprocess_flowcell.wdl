@@ -198,12 +198,13 @@ task call_methylation {
         jar -xf ${fast5_zip}
 
         /nanopolish/nanopolish index -d $fast5_path -s ${sequence_summary} ${fastq_gz}
-        /nanopolish/nanopolish call-methylation -t 1 -r ${fastq_gz} -b ${bam} -g ${ref_genome} > ${base}.methylation_calls.tsv
+        /nanopolish/nanopolish call-methylation -t 8 -r ${fastq_gz} -b ${bam} -g ${ref_genome} > ${base}.methylation_calls.tsv
     >>>
     
     runtime {
         continueOnReturnCode: false
         docker: "quay.io/aryeelab/nanopolish:${version}"
+        cpu: 8
         disks: "local-disk ${disk_size} HDD"
         preemptible: 1
         simg: "nanopolish.simg"
