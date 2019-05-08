@@ -256,6 +256,7 @@ task methylation_by_read {
    runtime {
         continueOnReturnCode: false
         docker: "quay.io/aryeelab/nanopore-util:${version}"
+        memory: "15GB"
         disks: "local-disk ${disk_size} HDD"
         simg: "nanopore-util.simg"
     }
