@@ -118,7 +118,7 @@ task basecall_and_demultiplex {
 	 >>>
     runtime {
         continueOnReturnCode: false
-        docker: if gpu then "quay.io/aryeelab/guppy-gpu:${version}" else "quay.io/aryeelab/guppy-cpu:${version}"
+        docker: if gpu then "quay.io/aryeelab/guppy-gpu" else "quay.io/aryeelab/guppy-cpu"
         bootDiskSizeGb: 20
         disks: "local-disk ${disk_size} HDD"
         gpuType: "nvidia-tesla-p100"
@@ -155,7 +155,7 @@ task removeReadsWithDuplicateID {
 	
     runtime {
         continueOnReturnCode: false
-        docker: "quay.io/aryeelab/nanopore-util:${version}"
+        docker: "quay.io/aryeelab/nanopore-util"
         memory: "15GB"
         disks: "local-disk ${disk_size} HDD"
         simg: "nanopore-util.simg"
@@ -185,7 +185,7 @@ task align {
     
     runtime {
         continueOnReturnCode: false
-        docker: "quay.io/aryeelab/minimap2:${version}"
+        docker: "quay.io/aryeelab/minimap2"
         memory: "30GB"
         disks: "local-disk ${disk_size} HDD"
         simg: "minimap2.simg"
@@ -225,7 +225,7 @@ task call_methylation {
     
     runtime {
         continueOnReturnCode: false
-        docker: "quay.io/aryeelab/nanopolish:${version}"
+        docker: "quay.io/aryeelab/nanopolish"
         cpu: 8
         disks: "local-disk ${disk_size} HDD"
         preemptible: 1
@@ -255,7 +255,7 @@ task methylation_by_read {
     
    runtime {
         continueOnReturnCode: false
-        docker: "quay.io/aryeelab/nanopore-util:${version}"
+        docker: "quay.io/aryeelab/nanopore-util"
         memory: "15GB"
         disks: "local-disk ${disk_size} HDD"
         simg: "nanopore-util.simg"
@@ -295,7 +295,7 @@ task demux_sample_sheet {
     
     runtime {
         continueOnReturnCode: false
-        docker: "quay.io/aryeelab/nanopore-util:${version}"
+        docker: "quay.io/aryeelab/nanopore-util"
         simg: "nanopore-util.simg"
     }
     
