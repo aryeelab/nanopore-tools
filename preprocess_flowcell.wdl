@@ -2,6 +2,7 @@ workflow preprocess_flowcell {
 
     String version = "dev"
     File monitoring_script = "gs://aryeelab/scripts/monitor_v2.sh"
+    #File monitoring_script = "monitor_v2.sh"
     String flowcell_id
     File fast5_zip
     File ref_genome
@@ -36,11 +37,11 @@ workflow preprocess_flowcell {
                                         monitoring_script = monitoring_script}
 
          # Summarize methylation by read
-         call methylation_by_read {input: base_methylation_calls = call_methylation.methylation_calls, 
+         call get_methylation_by_read {input: base_methylation_calls = call_methylation.methylation_calls, 
                                           monitoring_script = monitoring_script}
 
          # Generate read sequence marking methylated CpGs (M), unmethylated CpGs (U), and no-calls (?)
-         call methylation_read_sequence {input: base_methylation_calls = call_methylation.methylation_calls, 
+         call get_methylation_read_sequence {input: base_methylation_calls = call_methylation.methylation_calls, 
                                           monitoring_script = monitoring_script}
 
     }
@@ -51,8 +52,8 @@ workflow preprocess_flowcell {
                                     bams = align.bam,
                                     bais = align.bai,
                                     methylation_calls = call_methylation.methylation_calls,
-                                    read_methylation_calls = methylation_by_read.read_methylation_calls,
-                                    methylation_read_sequence = methylation_read_sequence.reads,
+                                    read_methylation_calls = get_methylation_by_read.read_methylation_calls,
+                                    methylation_read_sequence = get_methylation_read_sequence.reads,
                                     version = version}
     
     output {
@@ -237,7 +238,7 @@ task call_methylation {
 
 }
 
-task methylation_by_read {
+task get_methylation_by_read {
     File base_methylation_calls
     String base = basename(base_methylation_calls, ".methylation_calls.tsv")
     Int disk_size = ceil(size(base_methylation_calls, "GB")) * 2 + 20
@@ -265,18 +266,18 @@ task methylation_by_read {
 
 }
 
-task methylation_read_sequence {
+task get_methylation_read_sequence {
     File base_methylation_calls
     String base = basename(base_methylation_calls, ".methylation_calls.tsv")
     Int disk_size = ceil(size(base_methylation_calls, "GB")) * 2 + 20
     File monitoring_script
 
     command <<<
-        git checkout https://github.com/aryeelab/nanopore_tools.git
+        git clone https://github.com/aryeelab/nanopore_tools.git
         cd nanopore_tools
         git checkout dev
         cd ..
-        python nanopore_tools/scripts/methylation_read_sequence.py ${base_methylation_calls} ${base}.methylation_reads.tsv
+        python3.7 nanopore_tools/scripts/methylation_read_sequence.py ${base_methylation_calls} ${base}.methylation_reads.tsv
     >>>
 
    runtime {
