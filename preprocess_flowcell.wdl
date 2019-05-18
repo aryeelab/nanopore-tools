@@ -273,18 +273,17 @@ task get_methylation_read_sequence {
     File monitoring_script
 
     command <<<
-        git clone https://github.com/aryeelab/nanopore_tools.git
-        cd nanopore_tools
-        git checkout dev
-        cd ..
-        python3.7 nanopore_tools/scripts/methylation_read_sequence.py ${base_methylation_calls} ${base}.methylation_reads.tsv
+        chmod u+x ${monitoring_script}
+        ${monitoring_script} > monitoring.log &
+
+        python3.7 /usr/local/bin/methylation_read_sequence.py ${base_methylation_calls} ${base}.methylation_reads.tsv
     >>>
 
    runtime {
         continueOnReturnCode: false
-        docker: "quay.io/aryeelab/nanopore-util"
+        docker: "quay.io/aryeelab/nanopore-read-tools"
         disks: "local-disk ${disk_size} HDD"
-        simg: "nanopore-util.simg"
+        simg: "nanopore-read-tools.simg"
     }
     
    output {
