@@ -42,6 +42,11 @@ workflow preprocess_flowcell {
          call methylation_by_read {input: base_methylation_calls = call_methylation.methylation_calls, 
                                           version = version,
                                           monitoring_script = monitoring_script}
+
+         # Generate read sequence marking methylated CpGs (M), unmethylated CpGs (U), and no-calls (?)
+         call methylation_read_sequence {input: base_methylation_calls = call_methylation.methylation_calls, 
+                                          monitoring_script = monitoring_script}
+
     }
 
     call demux_sample_sheet {input: flowcell_id = flowcell_id,
@@ -51,6 +56,7 @@ workflow preprocess_flowcell {
                                     bais = align.bai,
                                     methylation_calls = call_methylation.methylation_calls,
                                     read_methylation_calls = methylation_by_read.read_methylation_calls,
+                                    methylation_read_sequence = methylation_read_sequence.reads,
                                     version = version}
     
     output {
@@ -268,6 +274,34 @@ task methylation_by_read {
 
 }
 
+task methylation_read_sequence {
+    File base_methylation_calls
+    String base = basename(base_methylation_calls, ".methylation_calls.tsv")
+    Int disk_size = ceil(size(base_methylation_calls, "GB")) * 2 + 20
+    File monitoring_script
+
+    command <<<
+        git checkout https://github.com/aryeelab/nanopore_tools.git
+        cd nanopore_tools
+        git checkout dev
+        cd ..
+        python nanopore_tools/scripts/methylation_read_sequence.py ${base_methylation_calls} ${base}.methylation_reads.tsv
+    >>>
+
+   runtime {
+        continueOnReturnCode: false
+        docker: "quay.io/aryeelab/nanopore-util"
+        disks: "local-disk ${disk_size} HDD"
+        simg: "nanopore-util.simg"
+    }
+    
+   output {
+        File reads = "${base}.methylation_reads.tsv"
+        File monitoring_log = "monitoring.log"
+    }
+}
+
+
 task demux_sample_sheet {
     String version
     String flowcell_id 
@@ -277,6 +311,7 @@ task demux_sample_sheet {
     Array[String] bais
     Array[String] methylation_calls
     Array[String] read_methylation_calls
+    Array[String] methylation_read_sequence
 
     command <<<
         echo fastq_gz ${sep=' ' fastq_gzs} >> samples_t.txt
@@ -285,6 +320,7 @@ task demux_sample_sheet {
         echo bai ${sep=' ' bais} >> samples_t.txt
         echo methylation_calls ${sep=' ' methylation_calls} >> samples_t.txt
         echo read_methylation_calls ${sep=' ' read_methylation_calls} >> samples_t.txt
+        echo methylation_read_sequence ${sep=' ' methylation_read_sequence} >> samples_t.txt
 
         cat samples_t.txt | datamash --output-delimiter=',' -t ' ' transpose > samples.csv 
         /usr/local/bin/add_flowcell_and_barcode_columns.R samples.csv samples.csv
