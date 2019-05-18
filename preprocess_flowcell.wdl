@@ -15,16 +15,14 @@ workflow preprocess_flowcell {
                                             fast5_zip = fast5_zip, 
                                             min_reads_per_barcode = min_reads_per_barcode, 
                                             disk_size = disk_size,
-                                            version = version,
                                             monitoring_script = monitoring_script}
 
     scatter (fastq_gz in basecall_and_demultiplex.fastq_gzs) {
-        call removeReadsWithDuplicateID {input: fastq_gz = fastq_gz, version = version}
+        call removeReadsWithDuplicateID {input: fastq_gz = fastq_gz}
         
         # Align with minimap2
         call align {input: fastq_gz = removeReadsWithDuplicateID.dedup_fastq_gz, 
                            ref_genome = ref_genome, 
-                           version = version,
                            monitoring_script = monitoring_script}
         
         # Call methylation with Nanopolish
@@ -35,12 +33,10 @@ workflow preprocess_flowcell {
                                         bai = align.bai,
                                         ref_genome = ref_genome,
                                         disk_size = disk_size,
-                                        version = version,
                                         monitoring_script = monitoring_script}
 
          # Summarize methylation by read
          call methylation_by_read {input: base_methylation_calls = call_methylation.methylation_calls, 
-                                          version = version,
                                           monitoring_script = monitoring_script}
 
          # Generate read sequence marking methylated CpGs (M), unmethylated CpGs (U), and no-calls (?)
@@ -69,7 +65,6 @@ workflow preprocess_flowcell {
 }
 
 task basecall_and_demultiplex {
-    String version
 	String flowcell_id
 	File fast5_zip
     String flowcell_type_id
@@ -144,7 +139,6 @@ task basecall_and_demultiplex {
 
 
 task removeReadsWithDuplicateID {
-    String version
     File fastq_gz
     String base = basename(fastq_gz, ".fq.gz")
     String fastq = "${base}.fq"
@@ -174,7 +168,6 @@ task removeReadsWithDuplicateID {
 
 
 task align {
-    String version
     File fastq_gz
     File ref_genome
     String base = basename(fastq_gz, ".fq.gz")
@@ -205,7 +198,6 @@ task align {
 }
 
 task call_methylation {
-    String version
     File fast5_zip
     File sequence_summary
     File fastq_gz
@@ -246,7 +238,6 @@ task call_methylation {
 }
 
 task methylation_by_read {
-    String version
     File base_methylation_calls
     String base = basename(base_methylation_calls, ".methylation_calls.tsv")
     Int disk_size = ceil(size(base_methylation_calls, "GB")) * 2 + 20
