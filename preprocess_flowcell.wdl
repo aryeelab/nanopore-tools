@@ -1,8 +1,8 @@
 workflow preprocess_flowcell {
 
     String version = "dev"
-    File monitoring_script = "gs://aryeelab/scripts/monitor_v2.sh"
-    #File monitoring_script = "monitor_v2.sh"
+    #File monitoring_script = "gs://aryeelab/scripts/monitor_v2.sh"
+    File monitoring_script = "monitor_v2.sh"
     String flowcell_id
     File fast5_zip
     File ref_genome
