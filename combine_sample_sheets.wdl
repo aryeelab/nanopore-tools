@@ -10,7 +10,7 @@ task rbind {
     >>>
     
     output {
-        samples = "samples.csv"    
+        File samples = "samples.csv"    
     }
 
 }
