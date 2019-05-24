@@ -2,7 +2,7 @@ workflow preprocess_flowcell {
 
     String version = "dev"
     #File monitoring_script = "gs://aryeelab/scripts/monitor_v2.sh"
-    File monitoring_script = "monitor_v2.sh"
+        File monitoring_script = "monitor_v2.sh"
     String flowcell_id
     File fast5_zip
     File ref_genome
@@ -81,12 +81,24 @@ task basecall_and_demultiplex {
     	chmod u+x ${monitoring_script}
         ${monitoring_script} > monitoring.log &
 	
-		fast5_path=`jar tf ${fast5_zip} | grep 'fast5/$'` # find path to fast5 dir within zip
-        echo "Unzipping ${fast5_zip}"
-        jar -xf ${fast5_zip}
-        echo "Moving $fast5_path to `basename $fast5_path`"
-        mv $fast5_path fast5
-
+	    extension=`echo ${fast5_zip} | sed 's/.*\.//'`
+	    if [ $extension == "zip" ]
+	    then    
+            fast5_path=`jar tf ${fast5_zip} | grep 'fast5/$'` # find path to fast5 dir within zip
+            echo "Unzipping ${fast5_zip}"
+            jar -xf ${fast5_zip}
+            echo "Moving $fast5_path to `basename $fast5_path`"
+            mv $fast5_path fast5
+	    elif [ $extension == "tar" ]
+	    then    
+            echo "Untarring ${fast5_zip}"
+            mkdir fast5
+            tar -xf ${fast5_zip} -C fast5
+        else 
+            echo "ERROR: Input file does not end in tar or zip."
+            exit 1
+        fi
+        
         # Basecall
 		guppy_basecaller -r -i fast5 -s guppy_basecaller -q 0 --flowcell ${flowcell_type_id} --kit ${kit_id} --qscore_filtering --min_qscore ${min_qscore} ${if gpu then '--device' else ''} ${if gpu then device else ''} 
 		    
