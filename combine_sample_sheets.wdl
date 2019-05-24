@@ -9,6 +9,10 @@ task rbind {
         cat ${sep=' ' sample_sheets} | awk '!seen[$0]++' > samples.csv
     >>>
     
+    runtime {
+        docker: "ubuntu"
+    }
+    
     output {
         File samples = "samples.csv"    
     }
