@@ -105,7 +105,7 @@ task basecall_and_demultiplex {
         cat guppy_basecaller/guppy_basecaller_log* > guppy_basecaller.log
 		guppy_barcoder -i guppy_basecaller/pass -s guppy_barcoder
 		\ls -d guppy_barcoder/*
-		barcodes="`cd guppy_barcoder && \ls -d barcode0*`"
+		barcodes="`cd guppy_barcoder && \ls -d barcode0* unclassified`"
         for barcode in $barcodes;
         do
             fastq_gz=${flowcell_id}__$barcode.fq.gz
