@@ -21,7 +21,7 @@ https://hub.docker.com/editions/community/docker-ce-desktop-mac
 ### Quick Start
 
 ```
-cromwell run -i test_data/test-run-1.json preprocess_flowcell.wdl 
+cromwell run -i test_data/test-run-1.cpu.json preprocess_flowcell.wdl 
 ```
 
 You can include the path to a custom Cromwell config file by something like:
