@@ -41,8 +41,8 @@ workflow preprocess_flowcell {
                                           monitoring_script = monitoring_script}
 
          # Generate read sequence marking methylated CpGs (M), unmethylated CpGs (U), and no-calls (?)
-         call get_methylation_read_sequence {input: base_methylation_calls = call_methylation.methylation_calls, 
-                                          monitoring_script = monitoring_script}
+         #call get_methylation_read_sequence {input: base_methylation_calls = call_methylation.methylation_calls, 
+         #                                 monitoring_script = monitoring_script}
 
     }
 
