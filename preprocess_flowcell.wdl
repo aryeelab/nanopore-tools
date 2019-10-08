@@ -191,7 +191,7 @@ task align {
         chmod u+x ${monitoring_script}
         ${monitoring_script} > monitoring.log &
         
-        minimap2 -ax map-ont -t 1 ${ref_genome} ${fastq_gz} | samtools sort -o ${base}.bam
+        minimap2 -ax map-ont -t 1 ${ref_genome} ${fastq_gz} | samtools view -b -F 2304 | samtools sort -o ${base}.bam
         samtools index ${base}.bam    
     >>>
     
