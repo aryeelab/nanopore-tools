@@ -314,7 +314,7 @@ task demux_sample_sheet {
     Array[String] bais
     Array[String] methylation_calls
     Array[String] read_methylation_calls
-    Array[String] methylation_read_sequence
+    #Array[String] methylation_read_sequence
 
     command <<<
         echo fastq_gz ${sep=' ' fastq_gzs} >> samples_t.txt
@@ -323,7 +323,7 @@ task demux_sample_sheet {
         echo bai ${sep=' ' bais} >> samples_t.txt
         echo methylation_calls ${sep=' ' methylation_calls} >> samples_t.txt
         echo read_methylation_calls ${sep=' ' read_methylation_calls} >> samples_t.txt
-        echo methylation_read_sequence ${sep=' ' methylation_read_sequence} >> samples_t.txt
+        #echo methylation_read_sequence ${sep=' ' methylation_read_sequence} >> samples_t.txt
 
         cat samples_t.txt | datamash --output-delimiter=',' -t ' ' transpose > samples.csv 
         /usr/local/bin/add_flowcell_and_barcode_columns.R samples.csv samples.csv
