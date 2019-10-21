@@ -4,6 +4,10 @@ workflow preprocess_flowcell {
     String flowcell_id
     File fast5_zip
     File ref_genome
+    File cpg_islands
+    File chrs
+    File compartments
+
     Int min_reads_per_barcode = 100
 
     Int disk_size = ceil(size(fast5_zip, "GB")) * 10 + 20
@@ -33,7 +37,7 @@ workflow preprocess_flowcell {
                                         version = version}
 
          # Summarize methylation by read
-         call methylation_by_read {input: base_methylation_calls = call_methylation.methylation_calls, version = version}
+         call methylation_by_read {input: base_methylation_calls = call_methylation.methylation_calls, version = version, threshold_ll = 2.5, cpg_islands = cpg_islands, chrs = chrs, compartments = compartments}
     }
 
     call demux_sample_sheet {input: flowcell_id = flowcell_id,
@@ -217,11 +221,15 @@ task call_methylation {
 task methylation_by_read {
     String version
     File base_methylation_calls
+    File cpg_islands
+    File chrs
+    File compartments
+    Int threshold_ll
     String base = basename(base_methylation_calls, ".methylation_calls.tsv")
     Int disk_size = ceil(size(base_methylation_calls, "GB")) * 2 + 20
 
     command <<<
-        Rscript /usr/local/bin/methylation_by_read.R ${base_methylation_calls} ${base}.read-methylation-calls.tsv
+	Rscript /usr/local/bin/kmer_to_read.R ${base_methylation_calls} ${base}.read-methylation-calls.tsv ${base}.annotated_kmers.tsv ${threshold_ll} ${cpg_islands} ${chrs} ${compartments}
     >>>
     
    runtime {
@@ -233,6 +241,7 @@ task methylation_by_read {
     
    output {
         File read_methylation_calls = "${base}.read-methylation-calls.tsv"
+        File annotated_kmers = "${base}.annotated_kmers.tsv"
     }
 
 }
