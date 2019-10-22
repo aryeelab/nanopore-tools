@@ -253,7 +253,7 @@ task get_methylation_by_read {
     File cpg_islands
     File chrs
     File compartments
-    Int threshold_ll
+    Float threshold_ll
     String base = basename(base_methylation_calls, ".methylation_calls.tsv")
     Int disk_size = ceil(size(base_methylation_calls, "GB")) * 2 + 20
     File monitoring_script
