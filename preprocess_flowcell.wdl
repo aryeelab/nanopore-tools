@@ -51,7 +51,6 @@ workflow preprocess_flowcell {
                                     bais = align.bai,
                                     methylation_calls = call_methylation.methylation_calls,
                                     read_methylation_calls = get_methylation_by_read.read_methylation_calls,
-                                   # methylation_read_sequence = get_methylation_read_sequence.reads,
                                     version = version}
     
     output {
