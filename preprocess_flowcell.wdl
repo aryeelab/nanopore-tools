@@ -249,6 +249,7 @@ task call_methylation {
 }
 
 task get_methylation_by_read {
+    String version
     File base_methylation_calls
     File cpg_islands
     File chrs
