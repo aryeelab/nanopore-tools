@@ -41,7 +41,7 @@ workflow preprocess_flowcell {
                                         monitoring_script = monitoring_script}
 
          # Summarize methylation by read
-         call methylation_by_read {input: base_methylation_calls = call_methylation.methylation_calls, version = version, threshold_ll = 2.5, cpg_islands = cpg_islands, chrs = chrs, compartments = compartments}
+         call get_methylation_by_read {input: base_methylation_calls = call_methylation.methylation_calls, version = version, threshold_ll = 2.5, cpg_islands = cpg_islands, chrs = chrs, compartments = compartments}
     }
 
     call demux_sample_sheet {input: flowcell_id = flowcell_id,
