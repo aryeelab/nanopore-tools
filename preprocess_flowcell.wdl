@@ -2,10 +2,14 @@ workflow preprocess_flowcell {
 
     String version = "dev"
     #File monitoring_script = "gs://aryeelab/scripts/monitor_v2.sh"
-        File monitoring_script = "monitor_v2.sh"
+    File monitoring_script = "monitor_v2.sh"
     String flowcell_id
     File fast5_zip
     File ref_genome
+    File cpg_islands
+    File chrs
+    File compartments
+
     Int min_reads_per_barcode = 100
 
     Int disk_size = ceil(size(fast5_zip, "GB")) * 10 + 20
@@ -37,13 +41,7 @@ workflow preprocess_flowcell {
                                         monitoring_script = monitoring_script}
 
          # Summarize methylation by read
-         call get_methylation_by_read {input: base_methylation_calls = call_methylation.methylation_calls, 
-                                          monitoring_script = monitoring_script}
-
-         # Generate read sequence marking methylated CpGs (M), unmethylated CpGs (U), and no-calls (?)
-         #call get_methylation_read_sequence {input: base_methylation_calls = call_methylation.methylation_calls, 
-         #                                 monitoring_script = monitoring_script}
-
+         call methylation_by_read {input: base_methylation_calls = call_methylation.methylation_calls, version = version, threshold_ll = 2.5, cpg_islands = cpg_islands, chrs = chrs, compartments = compartments}
     }
 
     call demux_sample_sheet {input: flowcell_id = flowcell_id,
@@ -252,6 +250,10 @@ task call_methylation {
 
 task get_methylation_by_read {
     File base_methylation_calls
+    File cpg_islands
+    File chrs
+    File compartments
+    Int threshold_ll
     String base = basename(base_methylation_calls, ".methylation_calls.tsv")
     Int disk_size = ceil(size(base_methylation_calls, "GB")) * 2 + 20
     File monitoring_script
@@ -259,8 +261,7 @@ task get_methylation_by_read {
     command <<<
         chmod u+x ${monitoring_script}
         ${monitoring_script} > monitoring.log &
-    
-        Rscript /usr/local/bin/methylation_by_read.R ${base_methylation_calls} ${base}.read-methylation-calls.tsv
+    	Rscript /usr/local/bin/kmer_to_read.R ${base_methylation_calls} ${base}.read-methylation-calls.tsv ${base}.annotated_kmers.tsv ${threshold_ll} ${cpg_islands} ${chrs} ${compartments}
     >>>
     
    runtime {
@@ -274,6 +275,7 @@ task get_methylation_by_read {
    output {
         File read_methylation_calls = "${base}.read-methylation-calls.tsv"
         File monitoring_log = "monitoring.log"
+        File annotated_kmers = "${base}.annotated_kmers.tsv"
     }
 
 }
