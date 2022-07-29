@@ -1,0 +1,13 @@
+diff --git a/Makefile b/Makefile
+index f784629..7d6408a 100644
+--- a/Makefile
++++ b/Makefile
+@@ -154,6 +154,8 @@ lib/libhdf5.a:
+ 
+ 	tar -xzf hdf5-$(HDF5_VERSION).tar.gz || exit 255
+ 	cd hdf5-$(HDF5_VERSION) && \
++		wget 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD' -O bin/config.guess && \
++		wget 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=HEAD' -O bin/config.sub && \
+ 		./configure CFLAGS="$(MAC_FLAGS)" CPPFLAGS="$(MAC_FLAGS)" --enable-threadsafe --disable-hl --libdir=`pwd`/../lib --includedir=`pwd`/../include --prefix=`pwd`/.. || exit 255
+ 	$(MAKE) -C hdf5-$(HDF5_VERSION) && $(MAKE) -C hdf5-$(HDF5_VERSION) install
+ 
