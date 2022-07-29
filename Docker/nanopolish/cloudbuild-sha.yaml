@@ -26,11 +26,14 @@ steps:
         - '--push'
         - 'Docker/nanopolish/'
       id: 'build-multi-architecture-container-image'
+
 options:
     env:
         - 'DOCKER_CLI_EXPERIMENTAL=enabled'
+
 substitutions:
     _DOCKER_BUILDX_PLATFORMS: 'linux/arm64'
-timeout: 3600s
+
+timeout: 10800s
 
 
