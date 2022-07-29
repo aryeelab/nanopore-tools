@@ -25,6 +25,9 @@ steps:
         - 'Docker/$_IMAGE_NAME/'
       id: 'build-multi-architecture-container-image'
 
+images:
+    - us-central1-docker.pkg.dev/aryeelab/$_IMAGE_NAME
+
 options:
     env:
         - 'DOCKER_CLI_EXPERIMENTAL=enabled'
