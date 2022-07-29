@@ -18,13 +18,13 @@ steps:
         - '--platform'
         - '$_DOCKER_BUILDX_PLATFORMS'
         - '-t'
-        - 'us-central1-docker.pkg.dev/aryeelab/minimap2:$SHORT_SHA'
+        - 'us-central1-docker.pkg.dev/aryeelab/$_IMAGE_NAME:$SHORT_SHA'
         - '-t'
-        - 'us-central1-docker.pkg.dev/aryeelab/minimap2:latest'
-        - '--cache-from=type=registry,ref=$us-central1-docker.pkg.dev/aryeelab/minimap2'
+        - 'us-central1-docker.pkg.dev/aryeelab/$_IMAGE_NAME:latest'
+        - '--cache-from=type=registry,ref=$us-central1-docker.pkg.dev/aryeelab/$_IMAGE_NAME'
         - '--cache-to=type=inline,mode=max'
         - '--push'
-        - 'Docker/minimap2/'
+        - 'Docker/$_IMAGE_NAME/'
       id: 'build-multi-architecture-container-image'
 
 options:
