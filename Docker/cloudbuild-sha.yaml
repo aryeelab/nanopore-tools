@@ -18,11 +18,11 @@ steps:
         - '--platform'
         - '$_DOCKER_BUILDX_PLATFORMS'
         - '-t'
-        - 'us-central1-docker.pkg.dev/aryeelab/$_IMAGE_NAME/docker:$SHORT_SHA'
+        - 'us-central1-docker.pkg.dev/aryeelab/docker/$_IMAGE_NAME:$SHORT_SHA'
         - '-t'
-        - 'us-central1-docker.pkg.dev/aryeelab/$_IMAGE_NAME/docker:latest'
-        - '--cache-from=type=registry,ref=us-central1-docker.pkg.dev/aryeelab//docker/docker'
-        - '--cache-to=type=inline,mode=max'
+        - 'us-central1-docker.pkg.dev/aryeelab/docker/$_IMAGE_NAME:latest'
+        - '--cache-from=type=registry,ref=us-central1-docker.pkg.dev/aryeelab/docker/$_IMAGE_NAME-build-cache'
+        - '--cache-to=type=registry,ref=us-central1-docker.pkg.dev/aryeelab/docker/$_IMAGE_NAME-build-cache, mode=max'
         - '--push'
         - 'Docker/$_IMAGE_NAME/'
       id: 'build-multi-architecture-container-image'
@@ -34,6 +34,5 @@ options:
 substitutions:
     _DOCKER_BUILDX_PLATFORMS: 'linux/amd64,linux/arm64'
 
-timeout: 3600s
-
+timeout: 14400s
 
