@@ -12,7 +12,19 @@ steps:
       args: ['buildx', 'inspect', '--bootstrap']
       id: 'show-target-build-platforms'
     - name: 'gcr.io/cloud-builders/docker:20.10.14'
-      args: ['buildx', 'build', '--platform', '$_DOCKER_BUILDX_PLATFORMS', '-t', 'us-central1-docker.pkg.dev/aryeelab/minimap2:$SHORT_SHA', '-t', 'us-central1-docker.pkg.dev/aryeelab/minimap2:latest', '--push', '.']
+      args: 
+        - 'buildx'
+        - 'build'
+        - '--platform'
+        - '$_DOCKER_BUILDX_PLATFORMS'
+        - '-t'
+        - 'us-central1-docker.pkg.dev/aryeelab/minimap2:$SHORT_SHA'
+        - '-t'
+        - 'us-central1-docker.pkg.dev/aryeelab/minimap2:latest'
+        - '--cache-from=type=registry,ref=$us-central1-docker.pkg.dev/aryeelab/minimap2'
+        - '--cache-to=type=inline,mode=max'
+        - '--push'
+        - 'Docker/minimap2/'
       id: 'build-multi-architecture-container-image'
 
 options:
