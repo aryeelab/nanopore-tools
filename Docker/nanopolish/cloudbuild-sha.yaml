@@ -24,7 +24,7 @@ steps:
         - '--cache-from=type=registry,ref=$us-central1-docker.pkg.dev/aryeelab/nanopolish'
         - '--cache-to=type=inline,mode=max'
         - '--push'
-        - '.'
+        - 'Docker/nanopolish/'
       id: 'build-multi-architecture-container-image'
 options:
     env:
