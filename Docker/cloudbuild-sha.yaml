@@ -28,7 +28,7 @@ steps:
       id: 'build-multi-architecture-container-image'
 
 images:
-    - us-central1-docker.pkg.dev/aryeelab/$_IMAGE_NAME/pkg
+    - us-central1-docker.pkg.dev/aryeelab/$_IMAGE_NAME/pkg:latest
 
 options:
     env:
