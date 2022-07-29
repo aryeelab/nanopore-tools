@@ -26,20 +26,6 @@ steps:
         - '--push'
         - 'Docker/$_IMAGE_NAME/'
       id: 'build-multi-architecture-container-image'
-    - name: 'gcr.io/cloud-builders/docker:20.10.14'
-      args: 
-        - 'buildx'
-        - 'build'
-        - '-t'
-        - 'us-central1-docker.pkg.dev/aryeelab/docker/$_IMAGE_NAME:amd64'
-        - '--cache-from=type=registry,ref=us-central1-docker.pkg.dev/aryeelab/docker/$_IMAGE_NAME-build-cache'
-        - '--cache-to=type=registry,ref=us-central1-docker.pkg.dev/aryeelab/docker/$_IMAGE_NAME-build-cache, mode=max'
-        - '--push'
-        - 'Docker/$_IMAGE_NAME/'
-      id: 'build-amd64-only-image-as-image-artifact'
-
-images:
-        - 'us-central1-docker.pkg.dev/aryeelab/docker/$_IMAGE_NAME:amd64'
 
 options:
     env:
