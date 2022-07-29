@@ -1,0 +1,36 @@
+steps:
+    - name: 'gcr.io/cloud-builders/docker:20.10.14'
+      args: ['run', '--privileged', 'tonistiigi/binfmt', '--install', 'all']
+      id: 'initialize-qemu'
+    - name: 'gcr.io/cloud-builders/docker:20.10.14'
+      args: ['buildx', 'create', '--name', 'mybuilder']
+      id: 'create-builder'
+    - name: 'gcr.io/cloud-builders/docker:20.10.14'
+      args: ['buildx', 'use', 'mybuilder']
+      id: 'select-builder'
+    - name: 'gcr.io/cloud-builders/docker:20.10.14'
+      args: ['buildx', 'inspect', '--bootstrap']
+      id: 'show-target-build-platforms'
+    - name: 'gcr.io/cloud-builders/docker:20.10.14'
+      args: 
+        - 'buildx'
+        - 'build'
+        - '--platform'
+        - '$_DOCKER_BUILDX_PLATFORMS'
+        - '-t'
+        - 'us-central1-docker.pkg.dev/aryeelab/nanopolish:$SHORT_SHA'
+        - '-t'
+        - 'us-central1-docker.pkg.dev/aryeelab/nanopolish:latest'
+        - '--cache-from=type=registry,ref=$us-central1-docker.pkg.dev/aryeelab/nanopolish'
+        - '--cache-to=type=inline,mode=max'
+        - '--push'
+        - '.'
+      id: 'build-multi-architecture-container-image'
+options:
+    env:
+        - 'DOCKER_CLI_EXPERIMENTAL=enabled'
+substitutions:
+    _DOCKER_BUILDX_PLATFORMS: 'linux/arm64'
+timeout: 3600s
+
+
