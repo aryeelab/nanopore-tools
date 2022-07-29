@@ -30,8 +30,6 @@ steps:
       args: 
         - 'buildx'
         - 'build'
-        - '--platform'
-        - 'linux/amd64'
         - '-t'
         - 'us-central1-docker.pkg.dev/aryeelab/docker/$_IMAGE_NAME:amd64'
         - '--cache-from=type=registry,ref=us-central1-docker.pkg.dev/aryeelab/docker/$_IMAGE_NAME-build-cache'
