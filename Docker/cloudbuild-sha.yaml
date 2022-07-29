@@ -21,8 +21,6 @@ steps:
         - 'us-central1-docker.pkg.dev/aryeelab/$_IMAGE_NAME:$SHORT_SHA'
         - '-t'
         - 'us-central1-docker.pkg.dev/aryeelab/$_IMAGE_NAME:latest'
-        - '--cache-from=type=registry,ref=us-central1-docker.pkg.dev/aryeelab/$_IMAGE_NAME'
-        - '--cache-to=type=inline,mode=max'
         - '--push'
         - 'Docker/$_IMAGE_NAME/'
       id: 'build-multi-architecture-container-image'
