@@ -18,15 +18,17 @@ steps:
         - '--platform'
         - '$_DOCKER_BUILDX_PLATFORMS'
         - '-t'
-        - 'us-central1-docker.pkg.dev/aryeelab/$_IMAGE_NAME:$SHORT_SHA'
+        - 'us-central1-docker.pkg.dev/aryeelab/$_IMAGE_NAME/pkg:$SHORT_SHA'
         - '-t'
-        - 'us-central1-docker.pkg.dev/aryeelab/$_IMAGE_NAME:latest'
+        - 'us-central1-docker.pkg.dev/aryeelab/$_IMAGE_NAME/pkg:latest'
+        - '--cache-from=type=registry,ref=us-central1-docker.pkg.dev/aryeelab/$_IMAGE_NAME/pkg'
+        - '--cache-to=type=inline,mode=max'
         - '--push'
         - 'Docker/$_IMAGE_NAME/'
       id: 'build-multi-architecture-container-image'
 
 images:
-    - us-central1-docker.pkg.dev/aryeelab/$_IMAGE_NAME
+    - us-central1-docker.pkg.dev/aryeelab/$_IMAGE_NAME/pkg
 
 options:
     env:
