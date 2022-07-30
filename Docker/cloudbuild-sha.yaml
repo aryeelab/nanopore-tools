@@ -31,7 +31,7 @@ steps:
       id: 'pull-to-return-image-artifact'
 
 options:
-    machineType: ${_MACHINE_TYPE}
+    machineType: 'E2_HIGHCPU_8'
     env:
         - 'DOCKER_CLI_EXPERIMENTAL=enabled'
         
