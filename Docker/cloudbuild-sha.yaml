@@ -27,11 +27,11 @@ steps:
         - 'Docker/$_IMAGE_NAME/'
       id: 'build-multi-architecture-container-image'
     - name: 'gcr.io/cloud-builders/docker:20.10.14'
-      args: ['pull', 'us-central1-docker.pkg.dev/aryeelab/docker/$_IMAGE_NAME:latest']
+      args: ['pull', 'us-central1-docker.pkg.dev/aryeelab/docker/$_IMAGE_NAME:$SHORT_SHA']
       id: 'pull-to-return-image-artifact'
 
 images:
-    - 'us-central1-docker.pkg.dev/aryeelab/docker/$_IMAGE_NAME:latest'
+    - 'us-central1-docker.pkg.dev/aryeelab/docker/$_IMAGE_NAME:$SHORT_SHA'
 
 options:
     env:
