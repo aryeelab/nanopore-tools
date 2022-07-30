@@ -32,7 +32,7 @@ images:
     - 'us-central1-docker.pkg.dev/aryeelab/docker/$_IMAGE_NAME:latest'
 
 options:
-    machineType: $_MACHINE_TYPE
+    machineType: E2_HIGHCPU_8
     env:
         - 'DOCKER_CLI_EXPERIMENTAL=enabled'
         
