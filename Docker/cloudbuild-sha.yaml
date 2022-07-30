@@ -28,6 +28,7 @@ steps:
 
 images:
     - 'us-central1-docker.pkg.dev/aryeelab/docker/$_IMAGE_NAME:$SHORT_SHA'
+    - 'us-central1-docker.pkg.dev/aryeelab/docker/$_IMAGE_NAME:latest'
 
 options:
     env:
