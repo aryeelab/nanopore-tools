@@ -13,3 +13,5 @@ RUN wget -nv https://cdn.oxfordnanoportal.com/software/analysis/ont_guppy_5.0.16
   
 # Install megalodon
 RUN pip install megalodon
+
+RUN pip install ont-pyguppy-client-lib==5.0.16
