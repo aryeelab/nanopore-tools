@@ -8,8 +8,8 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
   		ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime
 
 # Install guppy
-RUN wget -nv https://cdn.oxfordnanoportal.com/software/analysis/ont_guppy_6.2.1-1~focal_amd64.deb && \
-  		apt -y install ./ont_guppy_6.2.1-1~focal_amd64.deb 
+RUN wget -nv https://cdn.oxfordnanoportal.com/software/analysis/ont_guppy_5.0.16-1~focal_amd64.deb && \
+  		apt -y install ./ont_guppy_5.0.16-1~focal_amd64.deb 
   
 # Install megalodon
 RUN pip install megalodon
