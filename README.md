@@ -17,6 +17,257 @@ brew install cromwell
 https://hub.docker.com/editions/community/docker-ce-desktop-mac
 
 
+## Config for 5mC and 6mA
+https://github.com/nanoporetech/rerio/issues/20
+- Methylation (5mC & 6mA) call for MinION R10.3 reads #20
+For MinION R9.4.1 reads, Megalodon and res_dna_r941_min_modbases-all-context_v001.cfg in rerio worked perfectly!! I'm looking forward to doing same analysis with MinION R10.3 reads.
+
+## Dorado pipeline
+    
+    brew install openssl
+    brew install hdf5
+    
+    See https://github.com/gfx-rs/gfx/issues/2309
+        Install Xcode from the Apple App Store.
+        Install the command line tools with xcode-select --install. This might do nothing on your machine.
+        If xcode-select --print-path prints /Library/Developer/CommandLineTools then run sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer.
+    
+    git clone git@github.com:nanoporetech/dorado.git
+    cd dorado
+    cmake -S . -B cmake-build
+    cmake --build cmake-build --config Release -j
+    ctest --test-dir cmake-build
+
+
+## Megalodon pipeline setup - GCP
+
+    gcloud compute instances create megalodon \
+        --machine-type a2-highgpu-2g \
+        --zone us-central1-a \
+        --boot-disk-size 2000GB \
+        --image-family cos-97-lts \
+        --image-project cos-cloud \
+        --maintenance-policy TERMINATE --restart-on-failure 
+        
+        
+        gcloud compute ssh --zone us-central1-a megalodon
+        
+        #toolbox gsutil -m cp -r gs://aryeelab-nanopore/medium_test /media/root/home/martin/
+        toolbox gsutil -m cp -r gs://aryeelab-nanopore/griffinlab/2022-06-24_hek293-hia5-k9me3 /media/root/home/martin/
+        
+        # Install GPU drivers
+        sudo cos-extensions install gpu
+        sudo mount --bind /var/lib/nvidia /var/lib/nvidia
+        sudo mount -o remount,exec /var/lib/nvidia
+
+        # Configure artifact registry credentials
+        docker-credential-gcr configure-docker --registries us-central1-docker.pkg.dev
+
+        docker run --rm -it \
+          --volume /home/martin:/work \
+          --volume /var/lib/nvidia/lib64:/usr/local/nvidia/lib64 \
+          --volume /var/lib/nvidia/bin:/usr/local/nvidia/bin \
+          --device /dev/nvidia0:/dev/nvidia0 \
+          --device /dev/nvidia1:/dev/nvidia1 \
+          --device /dev/nvidia-uvm:/dev/nvidia-uvm \
+          --device /dev/nvidiactl:/dev/nvidiactl \
+          us-central1-docker.pkg.dev/aryeelab/docker/megalodon
+
+        # Download genome fasta
+        GENOME_URL="ftp://ftp.ncbi.nlm.nih.gov/genomes/archive/old_genbank/Eukaryotes/vertebrates_mammals/Homo_sapiens/GRCh38/seqs_for_alignment_pipelines/GCA_000001405.15_GRCh38_full_analysis_set.fna.gz"
+        wget ${GENOME_URL} -P /work
+  
+        # Obtain R9.4.1 modified base model from Rerio
+        git clone https://github.com/nanoporetech/rerio
+        rerio/download_model.py rerio/basecall_models/res_dna_r941_min_modbases-all-context_v001
+        
+        # Call bases
+        SAMPLE="2022-06-24_hek293-hia5-k9me3"
+        mkdir -p /work/megalodon
+        time megalodon \
+          /work/${SAMPLE} \
+          --output-directory /work/megalodon/${SAMPLE} \
+          --guppy-server-path /usr/bin/guppy_basecall_server \
+          --guppy-params "-d /rerio/basecall_models/" \
+          --guppy-config res_dna_r941_min_modbases-all-context_v001.cfg \
+          --outputs basecalls mappings mod_mappings mods per_read_mods \
+          --reference /work/$(basename $GENOME_URL) --mod-motif Z CG 0 --mod-motif Y A 0 \
+          --devices cuda:all --processes 20
+          
+
+
+        gcloud compute instances stop --zone us-central1-a megalodon
+        gcloud compute instances start --zone us-central1-a megalodon
+    
+        # Performance on 2022-06-24_hek293-hia5-k9me3
+        
+        VM              GPUs      processes   Reads/s   samples/s   $/hour
+        a2-highgpu-1g   1 A100    5           21        1.74e+6     $3.67
+        a2-highgpu-1g   1 A100    10          37        3.1e+6      $3.67
+        a2-highgpu-1g   1 A100    20          37        3.04e+6     $3.67
+        a2-highgpu-2g   2 A100    20          67        5.13e+6     $7.35
+        a2-highgpu-4g   4 A100    10          69        5.63e+6     $14.69
+        a2-highgpu-4g   4 A100    20          111       9.01e+6     $14.69
+        a2-highgpu-4g   4 A100    40          171       1.38e+7     $14.69  # Drops to 106 reads/s due to full output queue 
+        a2-highgpu-4g   4 A100    60          166       1.36e+7     $14.69
+    
+        polaris         2 A100    10          67        5.2e+6
+        polaris         2 A100    20          119       9.37e+6
+        polaris         2 A100    30          164       1.25e+7 # Drops to 145 due to full output queue
+    
+        polaris         1 A100    10          65        5.01e+6  
+        polaris         1 A100    20          117       9.07e+6
+        polaris         1 A100    30          164       1.3e+7 #  Drops to 145 due to full output queue
+        polaris         1 A100    40
+        polaris         1 A100    50
+        
+    
+        megalodon_extras aggregate run
+        a2-highgpu-2g
+        9:36:00
+        84954.53 per-read calls/s
+    
+## Megalodon pipeline setup - DFCI polaris
+        
+        # Get reference genome
+        
+        GENOME_URL="ftp://ftp.ncbi.nlm.nih.gov/genomes/archive/old_genbank/Eukaryotes/vertebrates_mammals/Homo_sapiens/GRCh38/seqs_for_alignment_pipelines/GCA_000001405.15_GRCh38_full_analysis_set.fna.gz"
+        wget ${GENOME_URL} -P /aryeelab/genomes
+        gunzip /aryeelab/genomes/$(basename $GENOME_URL)
+        
+        
+        # Obtain R9.4.1 modified base model from Rerio
+        cd /aryeelab/nanopore
+        git clone https://github.com/nanoporetech/rerio
+        rerio/download_model.py rerio/basecall_models/res_dna_r941_min_modbases-all-context_v001
+        
+        gcloud auth configure-docker us-central1-docker.pkg.dev
+        
+        singularity pull /aryeelab/singularity/megalodon.sif docker://us-central1-docker.pkg.dev/aryeelab/docker/megalodon
+        
+        # Call bases
+        singularity shell --bind /aryeelab /aryeelab/singularity/megalodon.sif 
+        
+        SAMPLE_DIR="/aryeelab/nanopore/griffinlab/2022-06-24_hek293-hia5-k9me3"
+        OUT_DIR="/aryeelab/nanopore/griffinlab/megalodon/2022-06-24_hek293-hia5-k9me3_6mA_only"
+        #OUT_DIR="/tmp/2022-06-24_hek293-hia5-k9me3_6mA_only"
+        GENOME="/aryeelab/genomes/GCA_000001405.15_GRCh38_full_analysis_set.fna"
+        
+
+        time megalodon \
+          ${SAMPLE_DIR} \
+          --output-directory ${OUT_DIR} \
+          --guppy-server-path /usr/bin/guppy_basecall_server \
+          --guppy-params "-d /aryeelab/nanopore/rerio/basecall_models/" \
+          --guppy-config res_dna_r941_min_modbases-all-context_v001.cfg \
+          --outputs basecalls mappings mod_mappings mods per_read_mods \
+          --reference ${GENOME} --mod-motif Y A 0 \
+          --devices cuda:0 --processes 25
+        
+        # --mod-motif Z CG 0
+        
+        
+        # Make bigwigs
+        CHROM_SIZES=/aryeelab/chrom_sizes/hg38.chrom.sizes
+        cp $CHROM_SIZES hg38.chrom.sizes
+        cd /aryeelab/nanopore/griffinlab/megalodon/2022-06-24_hek293-hia5-k9me3
+        #cat modified_bases.5mC.bed | cut -f 1,2,3,11 | sort -k1,1 -k2,2n > 5mC.percentage.bedgraph
+        #cat modified_bases.5mC.bed | cut -f 1,2,3,10 | sort -k1,1 -k2,2n > 5mC.coverage.bedgraph
+        time cat modified_bases.6mA.bed | cut -f 1,2,3,11 |sort -k1,1 -k2,2n > 6mA.percentage.bedgraph
+        time cat modified_bases.6mA.bed | cut -f 1,2,3,10 | sort -k1,1 -k2,2n > 6mA.coverage.bedgraph
+        
+        #singularity run docker://4dndcic/4dn-bedgraphtobigwig bedGraphToBigWig 5mC.percentage.bedgraph hg38.chrom.sizes 5mC.percentage.bw
+        #singularity run docker://4dndcic/4dn-bedgraphtobigwig bedGraphToBigWig 5mC.coverage.bedgraph hg38.chrom.sizes 5mC.coverage.bw
+        
+        time singularity run docker://4dndcic/4dn-bedgraphtobigwig bedGraphToBigWig 6mA.percentage.bedgraph hg38.chrom.sizes 6mA.percentage.bw
+        time singularity run docker://4dndcic/4dn-bedgraphtobigwig bedGraphToBigWig 6mA.coverage.bedgraph hg38.chrom.sizes 6mA.coverage.bw
+    
+### Polaris timing. 25 cores, 1 A100
+        Read Processing: 100%|█████████████████████████████████████████████████████████████████████████████████████| 1479118/1479118 [2:51:36<00:00, 143.65reads/s, samples/s=1.09e+7]
+         input queue capacity extract_signal      :   0%|                                                                                                                    | 0/10000
+        output queue capacity basecalls           :   0%|                                                                                                                    | 0/10000
+        output queue capacity mappings            :   0%|                                                                                                                    | 0/10000
+        output queue capacity per_read_mods       :   0%|                                                                                                                    | 1/10000
+        [23:48:40] Unsuccessful processing types:
+             9.8% ( 145645 reads) : No alignment
+        [23:48:40] Waiting for mods database to complete indexing
+        [01:32:17] Spawning modified base aggregation processes
+        [01:32:24] Aggregating 2941854010 per-read modified base statistics
+        [01:32:24] NOTE: If this step is very slow, ensure the output directory is located on a fast read disk (e.g. local SSD). Aggregation can be restarted using the `megalodon_extras aggregate run` command
+        Mods: 100%|████████████████████████████████████████████████████████████████████████████████████████████████| 2941854010/2941854010 [6:54:46<00:00, 118210.15 per-read calls/s]
+        [08:27:11] Mega Done
+        
+        real    691m28.998s
+        user    7549m36.412s
+        sys     793m27.347s
+
+    
+### Sort timing
+        (base) [martin@node01 2022-06-24_hek293-hia5-k9me3_gcp]$         time cat modified_bases.6mA.bed | cut -f 1,2,3,11 |sort -k1,1 -k2,2n > 6mA.percentage.bedgraph
+    
+    
+    real    441m47.441s
+    user    419m33.284s
+    sys     5m56.911s
+    
+    time cat modified_bases.6mA.bed | cut -f 1,2,3,11 > tmp.cut
+    time sort -k1,1 -k2,2n tmp.cut > tmp.6mA.percentage.bedgraph
+    
+    ##########################
+
+    docker run --rm -it -v ${PWD}:/work ubuntu 
+    
+    apt-get update
+    apt-get -y install python3-pip cython3
+    pip install numpy
+    pip install megalodon
+
+
+    # --------
+    #pip install pyzmq
+    #pip install pyzmq --install-option="--zmq=bundled"
+    # apt-get -y install python3-zmq libzmq3-dev pkg-config
+    #apt-get -y install python3-dev python3-pip build-essential libzmq3-dev
+
+    pip install pyzmq
+    pip install --pre pyzmq
+    
+    pip install pyzmq --install-option="--zmq=bundled"
+    
+
+### OLD
+
+        # Verify GPU installation
+        sudo mount --bind /var/lib/nvidia /var/lib/nvidia
+        sudo mount -o remount,exec /var/lib/nvidia
+        /var/lib/nvidia/bin/nvidia-smi
+
+        # Test a docker container
+        docker run \
+          --volume /var/lib/nvidia/lib64:/usr/local/nvidia/lib64 \
+          --volume /var/lib/nvidia/bin:/usr/local/nvidia/bin \
+          --device /dev/nvidia0:/dev/nvidia0 \
+          --device /dev/nvidia-uvm:/dev/nvidia-uvm \
+          --device /dev/nvidiactl:/dev/nvidiactl \
+          gcr.io/google_containers/cuda-vector-add:v0.1
+
+
+        # CUDA images https://hub.docker.com/r/nvidia/cuda
+        
+        docker run \
+          --volume /var/lib/nvidia/lib64:/usr/local/nvidia/lib64 \
+          --volume /var/lib/nvidia/bin:/usr/local/nvidia/bin \
+          --device /dev/nvidia0:/dev/nvidia0 \
+          --device /dev/nvidia-uvm:/dev/nvidia-uvm \
+          --device /dev/nvidiactl:/dev/nvidiactl \
+          nvidia/cuda:11.7.0-base-ubuntu20.04 nvidia-smi
+
+        # Interactive
+      
+
+
+
+
 ## mcaller m6A pipeline
 
 See https://github.com/al-mcintyre/mcaller
