@@ -1,0 +1,9 @@
+{
+    "nanoporetobigwigworkflow.sampledir": "/aryeelab/users/mark/dimeloseqdata/LMNB1_96",
+    "nanoporetobigwigworkflow.device": "cuda:0 --processes 25",
+    "nanoporetobigwigworkflow.modmotifs": "--mod-motif Z CG 0 --mod-motif Y A 0",
+    "nanoporetobigwigworkflow.outdir": "/misc/aryeelab-data/LMNB1_96",
+    "nanoporetobigwigworkflow.genome": "/aryeelab/genomes/GCA_000001405.15_GRCh38_full_analysis_set.fna",
+    "nanoporetobigwigworkflow.sortedchromsize": "/misc/aryeelab-data/hg38.bounds.bed",
+    "nanoporetobigwigworkflow.chromsizes": "/aryeelab/chrom_sizes/hg38.chrom.sizes"
+}
