@@ -103,10 +103,12 @@ task meg {
 		--guppy-config res_dna_r941_min_modbases-all-context_v001.cfg \
 		--outputs basecalls mappings mod_mappings mods per_read_mods \
 		--reference ~{genome} ~{modmotifs} \
-		--devices ~{device}
+		--devices ~{device} --mod-min-prob 0
 	>>>
 	runtime {
-		docker: "us-central1-docker.pkg.dev/aryeelab/docker/megalodon:latest"
+		image: "/aryeelab/singularity/megalodon.sif"
+		bindpath: "/aryeelab"
+		host:"/misc"
 	}
 	output {
 		File FivemCbed = "${outdir}/modified_bases.5mC.bed"
@@ -131,7 +133,9 @@ task QC {
         cov=$(samtools mpileup bamoutputsorted.bam | awk -v X="30" '$4>=X' | wc -l); echo 30 $cov >> base_coverage.txt
     >>>
     runtime {
-		docker: "us-central1-docker.pkg.dev/aryeelab/docker/samtools:latest"
+		image: "/misc/aryeelab-data/samtools.sif"
+		bindpath: "/aryeelab"
+		host:"/misc"
 	}
     output {
         String num_reads = read_lines(stdout())[0]
@@ -184,7 +188,9 @@ task bedtobedgraph {
 		cat ~{SixmAbed} | cut -f 1,2,3,10 | sort -k1,1 -k2,2n > SixmA.coverage.bedgraph
 	>>>
 	runtime {
-		docker: "us-central1-docker.pkg.dev/aryeelab/docker/bedops:latest"
+		image: "/misc/aryeelab-data/bedops.sif"
+		bindpath: "/aryeelab"
+		host:"/misc"
 	}
 	output {
 		File FivemCpercentbed = "FivemC.percentage.bed"
@@ -214,7 +220,9 @@ task smoothing {
 	>>>
 
 	runtime {
-		docker: "us-central1-docker.pkg.dev/aryeelab/docker/bedops:latest"
+		image: "/misc/aryeelab-data/bedops.sif"
+		bindpath: "/aryeelab"
+		host:"/misc"
 	}
 
 	output {
@@ -248,7 +256,9 @@ task bedgraphtobigwig {
 		bedGraphToBigWig ~{SixmAcoverageavgbedgraph} ~{chromsizes} SixmA.coverage.smoothed.bw
 	>>>
 	runtime {
-		docker: "us-central1-docker.pkg.dev/aryeelab/docker/bedgraphtobigwig:latest"
+		image: "/misc/aryeelab-data/bedgraphtobigwig.sif"
+		bindpath: "/aryeelab"
+		host:"/misc"
 	}
 	output {
 		File FivemCpercentbw = "FivemC.percentage.bw"
