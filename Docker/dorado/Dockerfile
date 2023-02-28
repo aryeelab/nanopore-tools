@@ -13,9 +13,10 @@ RUN pip install pod5 duplex_tools
 
 # Install Dorado
 RUN wget -q https://cdn.oxfordnanoportal.com/software/analysis/dorado-0.2.1-linux-x64.tar.gz && \
-	tar zxf dorado-0.2.1-linux-x64.tar.gz && \
-	ln -s /dorado-0.2.1-linux-x64/bin/dorado /usr/local/bin/
+    tar zxf dorado-0.2.1-linux-x64.tar.gz && \
+    ln -s /dorado-0.2.1-linux-x64/bin/dorado /usr/local/bin/
 
 # Install basecalling models
-RUN cd /dat && \
-	dorado download 
+RUN mkdir /dorado_models && \
+    cd /dorado_models && \
+    dorado download 
