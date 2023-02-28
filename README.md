@@ -56,6 +56,15 @@ For MinION R9.4.1 reads, Megalodon and res_dna_r941_min_modbases-all-context_v00
       --device /dev/nvidiactl:/dev/nvidiactl \
       nvidia/cuda:12.0.1-devel-ubuntu22.04
 
+	docker run --rm -it \
+      --volume /home/$USER/dat:/dat \
+      --volume /var/lib/nvidia/lib64:/usr/local/nvidia/lib64 \
+      --volume /var/lib/nvidia/bin:/usr/local/nvidia/bin \
+      --device /dev/nvidia0:/dev/nvidia0 \
+      --device /dev/nvidia-uvm:/dev/nvidia-uvm \
+      --device /dev/nvidiactl:/dev/nvidiactl \
+      us-central1-docker.pkg.dev/aryeelab/docker/dorado
+
     # Install basic packages
     apt-get update && \
     apt-get -y install  libbz2-dev \
