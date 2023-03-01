@@ -33,29 +33,29 @@ task basecall_duplex  {
     }
     command <<<
         mkdir fast5s
-        filetype=$(file ${fast5_archive})
+        filetype=$(file ~{fast5_archive})
 
         if [[ "$filetype" == *"gzip compressed data"* ]]; then
           echo "FAST5s appear to be compressed with gzip. Decompressing..."
-          tar zxvf ${fast5_archive} -C fast5s
+          tar zxvf ~{fast5_archive} -C fast5s
         fi
 
         if [[ "$filetype" == *"Zip archive data"* ]]; then
           echo "FAST5s appear to be compressed with zip. Decompressing..."
-          unzip ${fast5_archive} -d fast5s
+          unzip ~{fast5_archive} -d fast5s
         fi
         
         # Convert FAST5 into POD5
         pod5 convert fast5 -r fast5s pod5s/reads.pod5 --threads 12 
 
         # Simplex call with --emit-moves
-        dorado basecaller /dorado_models/${basecall_model} pod5s --emit-moves | samtools view -Sh > unmapped_reads_with_moves.bam
+        dorado basecaller /dorado_models/~{basecall_model} pod5s --emit-moves | samtools view -Sh > unmapped_reads_with_moves.bam
 
         # Identify potential pairs
         duplex_tools pair --output_dir ./pairs unmapped_reads_with_moves.bam
     
         # Stereo duplex basecall:
-        dorado duplex /dorado_models/${basecall_model} pod5s --pairs pairs/pair_ids_filtered.txt | samtools view -Sh > ${sample_id}.duplex.bam
+        dorado duplex /dorado_models/~{basecall_model} pod5s --pairs pairs/pair_ids_filtered.txt | samtools view -Sh > ~{sample_id}.duplex.bam
     >>>
     runtime {
     	gpuType: "nvidia-tesla-v100"
@@ -67,7 +67,7 @@ task basecall_duplex  {
         docker: "us-central1-docker.pkg.dev/aryeelab/docker/dorado"
     }
     output {
-        File duplex_bam = "${sample_id}.duplex.bam"
+        File duplex_bam = "~{sample_id}.duplex.bam"
         File pairs = "pairs/pair_ids_filtered.txt"
     }
 }
