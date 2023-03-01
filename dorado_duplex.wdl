@@ -58,6 +58,10 @@ task basecall_duplex  {
         dorado duplex /dorado_models/${basecall_model} pod5s --pairs pairs/pair_ids_filtered.txt | samtools view -Sh > ${sample_id}.duplex.bam
     >>>
     runtime {
+    	gpuType: "nvidia-tesla-a100"
+      	gpuCount: 1
+      	nvidiaDriverVersion: "470.161.03"
+      	zones: ["us-central1-a"] 
         docker: "us-central1-docker.pkg.dev/aryeelab/docker/dorado"
     }
     output {
