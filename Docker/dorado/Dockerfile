@@ -7,6 +7,7 @@ RUN apt-get update && \
                         liblzma-dev \
                         python3-pip \
                         samtools \
+                        unzip \
                         wget
 
 # Install pod5 tools and duplex tools
