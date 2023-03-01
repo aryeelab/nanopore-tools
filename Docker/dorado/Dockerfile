@@ -2,7 +2,8 @@ FROM nvidia/cuda:12.0.1-devel-ubuntu22.04
 
 # Install basic packages
 RUN apt-get update && \
-    apt-get -y install  libbz2-dev \
+    apt-get -y install  file \
+                        libbz2-dev \
                         liblzma-dev \
                         python3-pip \
                         samtools \
