@@ -1,0 +1,5 @@
+version: 1.2
+workflows:
+   - name: dorado_duplex
+     subclass: WDL
+     primaryDescriptorPath: /dorado_duplex.wdl
