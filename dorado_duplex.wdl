@@ -35,19 +35,25 @@ task basecall_duplex  {
         mkdir fast5s
         filetype=$(file ~{fast5_archive})
 
+        if [[ $file == *.pod5 ]]; then
+            mkdir pod5s
+            ln -s ~{fast5_archive} pod5s/reads.pod5
+        fi
+
         if [[ "$filetype" == *"gzip compressed data"* ]]; then
           echo "FAST5s appear to be compressed with gzip. Decompressing..."
           tar zxvf ~{fast5_archive} -C fast5s
+          # Convert FAST5 into POD5
+          pod5 convert fast5 -r fast5s pod5s/reads.pod5 --threads 12 
         fi
 
         if [[ "$filetype" == *"Zip archive data"* ]]; then
           echo "FAST5s appear to be compressed with zip. Decompressing..."
           unzip ~{fast5_archive} -d fast5s
+          # Convert FAST5 into POD5
+          pod5 convert fast5 -r fast5s pod5s/reads.pod5 --threads 12 
         fi
         
-        # Convert FAST5 into POD5
-        pod5 convert fast5 -r fast5s pod5s/reads.pod5 --threads 12 
-
         # Simplex call with --emit-moves
         dorado basecaller /dorado_models/~{basecall_model} pod5s --emit-moves | samtools view -Sh > unmapped_reads_with_moves.bam
 
@@ -58,12 +64,12 @@ task basecall_duplex  {
         dorado duplex /dorado_models/~{basecall_model} pod5s --pairs pairs/pair_ids_filtered.txt | samtools view -Sh > ~{sample_id}.duplex.bam
     >>>
     runtime {
-    	gpuType: "nvidia-tesla-v100"
-      	gpuCount: 1
-      	cpu: 12
-      	memory: "32GB"
-      	nvidiaDriverVersion: "470.161.03"
-      	zones: ["us-central1-a"] 
+        gpuType: "nvidia-tesla-v100"
+        gpuCount: 1
+        cpu: 12
+        memory: "32GB"
+        nvidiaDriverVersion: "470.161.03"
+        zones: ["us-central1-a"] 
         docker: "us-central1-docker.pkg.dev/aryeelab/docker/dorado"
     }
     output {
