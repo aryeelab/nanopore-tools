@@ -30,6 +30,7 @@ task basecall_duplex  {
         String sample_id
         File fast5_archive
         String basecall_model
+        Int disk_gb = ceil(size(fast5_archive, "GB")*3) + 5
     }
     command <<<
         filetype=$(file ~{fast5_archive})
@@ -68,6 +69,7 @@ task basecall_duplex  {
         gpuType: "nvidia-tesla-v100"
         gpuCount: 1
         cpu: 12
+        disks: "local-disk " + disk_gb + " SSD" 
         memory: "32GB"
         nvidiaDriverVersion: "470.161.03"
         zones: ["us-central1-a"] 
