@@ -32,16 +32,16 @@ task basecall_duplex  {
         String basecall_model
     }
     command <<<
-        mkdir fast5s
         filetype=$(file ~{fast5_archive})
 
-        if [[ $file == *.pod5 ]]; then
+        if [[ ~{fast5_archive} == *.pod5 ]]; then
             mkdir pod5s
             ln -s ~{fast5_archive} pod5s/reads.pod5
         fi
 
         if [[ "$filetype" == *"gzip compressed data"* ]]; then
           echo "FAST5s appear to be compressed with gzip. Decompressing..."
+          mkdir fast5s
           tar zxvf ~{fast5_archive} -C fast5s
           # Convert FAST5 into POD5
           pod5 convert fast5 -r fast5s pod5s/reads.pod5 --threads 12 
@@ -49,6 +49,7 @@ task basecall_duplex  {
 
         if [[ "$filetype" == *"Zip archive data"* ]]; then
           echo "FAST5s appear to be compressed with zip. Decompressing..."
+          mkdir fast5s 
           unzip ~{fast5_archive} -d fast5s
           # Convert FAST5 into POD5
           pod5 convert fast5 -r fast5s pod5s/reads.pod5 --threads 12 
