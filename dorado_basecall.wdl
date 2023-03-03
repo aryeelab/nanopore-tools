@@ -1,6 +1,6 @@
 version 1.0
 
-workflow dorado_duplex {
+workflow dorado_basecall {
 
     input {
         String sample_id
@@ -8,7 +8,7 @@ workflow dorado_duplex {
         String basecall_model
     }
 
-    call basecall_duplex {
+    call basecall {
         input:
             sample_id = sample_id,
             fast5_archive = fast5_archive,
@@ -16,8 +16,9 @@ workflow dorado_duplex {
     }
 
     output {
-        File duplex_bam = basecall_duplex.duplex_bam
-        File pairs = basecall_duplex.pairs
+        File unmapped_bam = basecall.unmapped_bam
+        File duplex_unmapped_bam = basecall.duplex_unmapped_bam
+        File pairs = basecall.pairs
     }
 
     meta {
@@ -25,7 +26,7 @@ workflow dorado_duplex {
         email:"martin.aryee@gmail.com"
     }
 }
-task basecall_duplex  {
+task basecall  {
     input {
         String sample_id
         File fast5_archive
@@ -57,13 +58,13 @@ task basecall_duplex  {
         fi
         
         # Simplex call with --emit-moves
-        dorado basecaller /dorado_models/~{basecall_model} pod5s --emit-moves | samtools view -Sh > unmapped_reads_with_moves.bam
+        dorado basecaller /dorado_models/~{basecall_model} pod5s --emit-moves | samtools view -Sh > ~{sample_id}.unmapped.bam
 
         # Identify potential pairs
-        duplex_tools pair --output_dir ./pairs unmapped_reads_with_moves.bam
+        duplex_tools pair --output_dir ./pairs ~{sample_id}.unmapped.bam
     
         # Stereo duplex basecall:
-        dorado duplex /dorado_models/~{basecall_model} pod5s --pairs pairs/pair_ids_filtered.txt | samtools view -Sh > ~{sample_id}.duplex.bam
+        dorado duplex /dorado_models/~{basecall_model} pod5s --pairs pairs/pair_ids_filtered.txt | samtools view -Sh > ~{sample_id}.duplex.unmapped.bam
     >>>
     runtime {
         gpuType: "nvidia-tesla-v100"
@@ -76,7 +77,8 @@ task basecall_duplex  {
         docker: "us-central1-docker.pkg.dev/aryeelab/docker/dorado"
     }
     output {
-        File duplex_bam = "~{sample_id}.duplex.bam"
+        File unmapped_bam = "~{sample_id}.unmapped.bam"
+        File duplex_unmapped_bam = "~{sample_id}.duplex.unmapped.bam"
         File pairs = "pairs/pair_ids_filtered.txt"
     }
 }
