@@ -57,8 +57,8 @@ task basecall  {
           pod5 convert fast5 -r fast5s pod5s/reads.pod5 --threads 12 
         fi
         
-        # Simplex call with --emit-moves
-        dorado basecaller /dorado_models/~{basecall_model} pod5s --emit-moves | samtools view -Sh > ~{sample_id}.unmapped.bam
+        # Simplex call with --emit-moves and --modified-bases
+        dorado basecaller /dorado_models/~{basecall_model} pod5s --modified-bases --emit-moves | samtools view -Sh > ~{sample_id}.unmapped.bam
 
         # Identify potential pairs
         duplex_tools pair --output_dir ./pairs ~{sample_id}.unmapped.bam
