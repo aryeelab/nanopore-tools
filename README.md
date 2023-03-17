@@ -30,8 +30,10 @@ Tools tested:
 
 #### Test datasets
 
-- NanoHiMe paper HepG2 Hia5/K27me3 [fast5](https://www.ebi.ac.uk/ena/browser/view/PRJEB47152)
 
+- NanoHiMe paper HepG2 Hia5/K27me3 [fast5](https://www.ebi.ac.uk/ena/browser/view/PRJEB47152).
+
+Local Kraken copy of run 1: `/aryeelab/users/mark/NanoHiMeref/HepG2H3K27me3_1/HepG2_nanoHiMe_H3K27me3_1.pod5`
 
 ### 5mC reference datasets
 
