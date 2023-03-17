@@ -16,6 +16,36 @@ brew install cromwell
 
 https://hub.docker.com/editions/community/docker-ce-desktop-mac
 
+## Benchmarking DNA modification calling
+
+Tools tested:
+
+| Tool        | 5mC (CpG) | 6mA |
+| ----------- | --------- |-----|
+| Nanopolish  | X         |     |
+| Dorado      | X         |     |
+| Megalodon   | X         |  X  |
+| NanoHiMe    | X         |  X  |
+
+
+#### Test datasets
+
+- NanoHiMe paper HepG2 Hia5/K27me3 [fast5](https://www.ebi.ac.uk/ena/browser/view/PRJEB47152)
+
+
+### 5mC reference datasets
+
+- HepG2 CpG methylation (ENCODE WGBS) [bigbed](https://www.encodeproject.org/files/ENCFF857YRG/@@download/ENCFF857YRG.bigBed)
+
+
+### 6mA
+
+#### Reference datasets
+
+- HepG2 K27me3 (ENCODE ChIP-Seq) [bigwig](https://www.encodeproject.org/files/ENCFF419FUZ/@@download/ENCFF419FUZ.bigWig)
+
+
+
 
 ## Config for 5mC and 6mA
 https://github.com/nanoporetech/rerio/issues/20
