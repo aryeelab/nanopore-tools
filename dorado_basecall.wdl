@@ -17,8 +17,8 @@ workflow dorado_basecall {
 
     output {
         File unmapped_bam = basecall.unmapped_bam
-        File duplex_unmapped_bam = basecall.duplex_unmapped_bam
-        File pairs = basecall.pairs
+        File? duplex_unmapped_bam = basecall.duplex_unmapped_bam
+        File? pairs = basecall.pairs
     }
 
     meta {
@@ -63,8 +63,14 @@ task basecall  {
         # Identify potential pairs
         duplex_tools pair --output_dir ./pairs ~{sample_id}.unmapped.bam
     
-        # Stereo duplex basecall:
-        dorado duplex /dorado_models/~{basecall_model} pod5s --pairs pairs/pair_ids_filtered.txt | samtools view -Sh > ~{sample_id}.duplex.unmapped.bam
+        # Stereo duplex basecall
+        if [ -f "pairs/pair_ids_filtered.txt" ]; then
+            NUM_PAIRS=$(wc -l pairs/pair_ids_filtered.txt)
+            echo "${NUM_PAIRS} pairs found. Duplex calling..."
+            dorado duplex /dorado_models/~{basecall_model} pod5s --pairs pairs/pair_ids_filtered.txt | samtools view -Sh > ~{sample_id}.duplex.unmapped.bam    
+        else 
+            echo "No pairs found."
+        fi
     >>>
     runtime {
         gpuType: "nvidia-tesla-v100"
@@ -78,7 +84,7 @@ task basecall  {
     }
     output {
         File unmapped_bam = "~{sample_id}.unmapped.bam"
-        File duplex_unmapped_bam = "~{sample_id}.duplex.unmapped.bam"
-        File pairs = "pairs/pair_ids_filtered.txt"
+        File? duplex_unmapped_bam = "~{sample_id}.duplex.unmapped.bam"
+        File? pairs = "pairs/pair_ids_filtered.txt"
     }
 }
