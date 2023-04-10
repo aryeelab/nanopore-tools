@@ -213,10 +213,10 @@ task smoothing {
 	}
 
 	command <<<
-		bedops --chop 10000 ~{sortedchromsize} | bedmap --faster --echo --mean --count --delim "\t" --skip-unmapped - ~{FivemCpercentbed} | cat | cut -f 1,2,3,4 | sort -k1,1 -k2,2n > FivemCpercent.avg.bedgraph
-		bedops --chop 10000 ~{sortedchromsize} | bedmap --faster --echo --mean --count --delim "\t" --skip-unmapped - ~{FivemCcoveragebed} | cat | cut -f 1,2,3,4 | sort -k1,1 -k2,2n > FivemCcoverage.avg.bedgraph
-		bedops --chop 10000 ~{sortedchromsize} | bedmap --faster --echo --mean --count --delim "\t" --skip-unmapped - ~{SixmApercentbed} | cat | cut -f 1,2,3,4 | sort -k1,1 -k2,2n > SixmApercent.avg.bedgraph
-		bedops --chop 10000 ~{sortedchromsize} | bedmap --faster --echo --mean --count --delim "\t" --skip-unmapped - ~{SixmAcoveragebed} | cat | cut -f 1,2,3,4 | sort -k1,1 -k2,2n > SixmAcoverage.avg.bedgraph
+		bedops --chop 1000 ~{sortedchromsize} | bedmap --faster --echo --mean --count --delim "\t" --skip-unmapped - ~{FivemCpercentbed} | cat | cut -f 1,2,3,4 | sort -k1,1 -k2,2n > FivemCpercent.avg.bedgraph
+		bedops --chop 1000 ~{sortedchromsize} | bedmap --faster --echo --mean --count --delim "\t" --skip-unmapped - ~{FivemCcoveragebed} | cat | cut -f 1,2,3,4 | sort -k1,1 -k2,2n > FivemCcoverage.avg.bedgraph
+		bedops --chop 1000 ~{sortedchromsize} | bedmap --faster --echo --mean --count --delim "\t" --skip-unmapped - ~{SixmApercentbed} | cat | cut -f 1,2,3,4 | sort -k1,1 -k2,2n > SixmApercent.avg.bedgraph
+		bedops --chop 1000 ~{sortedchromsize} | bedmap --faster --echo --mean --count --delim "\t" --skip-unmapped - ~{SixmAcoveragebed} | cat | cut -f 1,2,3,4 | sort -k1,1 -k2,2n > SixmAcoverage.avg.bedgraph
 	>>>
 
 	runtime {

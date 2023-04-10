@@ -107,6 +107,9 @@ task meg {
 	>>>
 	runtime {
 		docker: "us-central1-docker.pkg.dev/aryeelab/docker/megalodon:latest"
+		memory: "64G"
+		disks: "local-disk 1000 SSD"
+		cpu: 16
 	}
 	output {
 		File FivemCbed = "${outdir}/modified_bases.5mC.bed"
@@ -132,6 +135,9 @@ task QC {
     >>>
     runtime {
 		docker: "us-central1-docker.pkg.dev/aryeelab/docker/samtools:latest"
+		memory: "64G"
+		disks: "local-disk 500 SSD"
+		cpu: 4
 	}
     output {
         String num_reads = read_lines(stdout())[0]
@@ -185,6 +191,9 @@ task bedtobedgraph {
 	>>>
 	runtime {
 		docker: "us-central1-docker.pkg.dev/aryeelab/docker/bedops:latest"
+		memory: "64G"
+		disks: "local-disk 500 SSD"
+		cpu: 8
 	}
 	output {
 		File FivemCpercentbed = "FivemC.percentage.bed"
@@ -207,14 +216,17 @@ task smoothing {
 	}
 
 	command <<<
-		bedops --chop 10000 ~{sortedchromsize} | bedmap --faster --echo --mean --count --delim "\t" --skip-unmapped - ~{FivemCpercentbed} | cat | cut -f 1,2,3,4 | sort -k1,1 -k2,2n > FivemCpercent.avg.bedgraph
-		bedops --chop 10000 ~{sortedchromsize} | bedmap --faster --echo --mean --count --delim "\t" --skip-unmapped - ~{FivemCcoveragebed} | cat | cut -f 1,2,3,4 | sort -k1,1 -k2,2n > FivemCcoverage.avg.bedgraph
-		bedops --chop 10000 ~{sortedchromsize} | bedmap --faster --echo --mean --count --delim "\t" --skip-unmapped - ~{SixmApercentbed} | cat | cut -f 1,2,3,4 | sort -k1,1 -k2,2n > SixmApercent.avg.bedgraph
-		bedops --chop 10000 ~{sortedchromsize} | bedmap --faster --echo --mean --count --delim "\t" --skip-unmapped - ~{SixmAcoveragebed} | cat | cut -f 1,2,3,4 | sort -k1,1 -k2,2n > SixmAcoverage.avg.bedgraph
+		bedops --chop 1000 ~{sortedchromsize} | bedmap --faster --echo --mean --count --delim "\t" --skip-unmapped - ~{FivemCpercentbed} | cat | cut -f 1,2,3,4 | sort -k1,1 -k2,2n > FivemCpercent.avg.bedgraph
+		bedops --chop 1000 ~{sortedchromsize} | bedmap --faster --echo --mean --count --delim "\t" --skip-unmapped - ~{FivemCcoveragebed} | cat | cut -f 1,2,3,4 | sort -k1,1 -k2,2n > FivemCcoverage.avg.bedgraph
+		bedops --chop 1000 ~{sortedchromsize} | bedmap --faster --echo --mean --count --delim "\t" --skip-unmapped - ~{SixmApercentbed} | cat | cut -f 1,2,3,4 | sort -k1,1 -k2,2n > SixmApercent.avg.bedgraph
+		bedops --chop 1000 ~{sortedchromsize} | bedmap --faster --echo --mean --count --delim "\t" --skip-unmapped - ~{SixmAcoveragebed} | cat | cut -f 1,2,3,4 | sort -k1,1 -k2,2n > SixmAcoverage.avg.bedgraph
 	>>>
 
 	runtime {
 		docker: "us-central1-docker.pkg.dev/aryeelab/docker/bedops:latest"
+		memory: "64G"
+		disks: "local-disk 500 SSD"
+		cpu: 8
 	}
 
 	output {
@@ -249,6 +261,9 @@ task bedgraphtobigwig {
 	>>>
 	runtime {
 		docker: "us-central1-docker.pkg.dev/aryeelab/docker/bedgraphtobigwig:latest"
+		memory: "64G"
+		disks: "local-disk 500 SSD"
+		cpu: 8
 	}
 	output {
 		File FivemCpercentbw = "FivemC.percentage.bw"
