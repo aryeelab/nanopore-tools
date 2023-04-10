@@ -20,12 +20,12 @@ https://hub.docker.com/editions/community/docker-ce-desktop-mac
 
 Tools tested:
 
-| Tool        | 5mC (CpG) | 6mA |
-| ----------- | --------- |-----|
-| Nanopolish  | X         |     |
-| Dorado      | X         |     |
-| Megalodon   | X         |  X  |
-| NanoHiMe    | X         |  X  |
+| Tool        | 5mC (CpG) | 5mC (GpC) | 6mA |
+| ----------- | --------- |-----------|-----|
+| Nanopolish  | X         |    X      |     |
+| Dorado      | X         |    ?      |     |
+| Megalodon   | X         |    X      |  X  |
+| NanoHiMe    | X         |           |  X  |
 
 
 #### Test datasets
