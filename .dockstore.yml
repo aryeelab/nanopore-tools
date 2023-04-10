@@ -1,4 +1,5 @@
 version: 1.2
+<<<<<<< HEAD
 tools:
   - name: megalodon
     subclass: WDL
@@ -8,3 +9,9 @@ tools:
     authors:
         - name: Mark Soliman
           email: msoliman@ds.dfci.harvard.edu
+=======
+workflows:
+   - name: dorado_basecall
+     subclass: WDL
+     primaryDescriptorPath: /dorado_basecall.wdl
+>>>>>>> d5dc079e91a2a134663ed0bb87da93e02714662c

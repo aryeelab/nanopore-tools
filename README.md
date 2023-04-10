@@ -16,6 +16,38 @@ brew install cromwell
 
 https://hub.docker.com/editions/community/docker-ce-desktop-mac
 
+## Benchmarking DNA modification calling
+
+Tools tested:
+
+| Tool        | 5mC (CpG) | 6mA |
+| ----------- | --------- |-----|
+| Nanopolish  | X         |     |
+| Dorado      | X         |     |
+| Megalodon   | X         |  X  |
+| NanoHiMe    | X         |  X  |
+
+
+#### Test datasets
+
+
+- NanoHiMe paper HepG2 Hia5/K27me3 [fast5](https://www.ebi.ac.uk/ena/browser/view/PRJEB47152).
+
+Local Kraken copy of run 1: `/aryeelab/users/mark/NanoHiMeref/HepG2H3K27me3_1/HepG2_nanoHiMe_H3K27me3_1.pod5`
+
+### 5mC reference datasets
+
+- HepG2 CpG methylation (ENCODE WGBS) [bigbed](https://www.encodeproject.org/files/ENCFF857YRG/@@download/ENCFF857YRG.bigBed)
+
+
+### 6mA
+
+#### Reference datasets
+
+- HepG2 K27me3 (ENCODE ChIP-Seq) [bigwig](https://www.encodeproject.org/files/ENCFF419FUZ/@@download/ENCFF419FUZ.bigWig)
+
+
+
 
 ## Config for 5mC and 6mA
 https://github.com/nanoporetech/rerio/issues/20
@@ -24,19 +56,82 @@ For MinION R9.4.1 reads, Megalodon and res_dna_r941_min_modbases-all-context_v00
 
 ## Dorado pipeline
     
-    brew install openssl
-    brew install hdf5
+    # "Manually" on a COS GCP machine:
+    # See https://cloud.google.com/container-optimized-os/docs/how-to/run-gpus
+
+    # Start the VM with an NVIDIA A100 40GB GPU from the cloud console (https://console.cloud.google.com/compute/)
+    # or command line as below. In this case we're naming it `dorado-1`.
+    gcloud compute instances create dorado-1 --project=aryeelab --zone=us-central1-a --machine-type=a2-highgpu-1g --network-interface=network-tier=PREMIUM,subnet=default --maintenance-policy=TERMINATE --provisioning-model=STANDARD --service-account=303574531351-compute@developer.gserviceaccount.com --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append --accelerator=count=1,type=nvidia-tesla-a100 --create-disk=auto-delete=yes,boot=yes,device-name=dorado-1,image=projects/cos-cloud/global/images/cos-101-17162-127-8,mode=rw,size=200,type=projects/aryeelab/zones/us-central1-a/diskTypes/pd-balanced --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=any
     
-    See https://github.com/gfx-rs/gfx/issues/2309
-        Install Xcode from the Apple App Store.
-        Install the command line tools with xcode-select --install. This might do nothing on your machine.
-        If xcode-select --print-path prints /Library/Developer/CommandLineTools then run sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer.
+    # SSH into the VM
+    gcloud compute ssh --zone "us-central1-a" "dorado-1"  --project "aryeelab"
     
-    git clone git@github.com:nanoporetech/dorado.git
-    cd dorado
-    cmake -S . -B cmake-build
-    cmake --build cmake-build --config Release -j
-    ctest --test-dir cmake-build
+    # Install NVIDIA driver 
+    sudo cos-extensions list # Current default: 470.161.03
+    sudo cos-extensions install gpu 
+    
+    # Make the driver installation path executable by re-mounting it.
+    sudo mount --bind /var/lib/nvidia /var/lib/nvidia
+    sudo mount -o remount,exec /var/lib/nvidia
+    
+    # Get FAST5 data
+    mkdir -p dat/fast5s
+    toolbox gsutil cp gs://aryeelab-joung/nanopore/test/small-sample1/* /media/root/home/$USER/dat/fast5s/
+
+    # Start a docker container with access to the FAST5 dir and the GPU
+    docker run --rm -it \
+      --volume /home/$USER/dat:/dat \
+      --volume /var/lib/nvidia/lib64:/usr/local/nvidia/lib64 \
+      --volume /var/lib/nvidia/bin:/usr/local/nvidia/bin \
+      --device /dev/nvidia0:/dev/nvidia0 \
+      --device /dev/nvidia-uvm:/dev/nvidia-uvm \
+      --device /dev/nvidiactl:/dev/nvidiactl \
+      nvidia/cuda:12.0.1-devel-ubuntu22.04
+
+    # Install basic packages
+    apt-get update && \
+    apt-get -y install  libbz2-dev \
+                        liblzma-dev \
+                        python3-pip \
+                        samtools \
+                        wget
+
+    # Install pod5 tools and duplex tools
+    pip install pod5 duplex_tools
+
+    # Install Dorado
+    wget -q https://cdn.oxfordnanoportal.com/software/analysis/dorado-0.2.1-linux-x64.tar.gz && \
+    tar zxf dorado-0.2.1-linux-x64.tar.gz && \
+    ln -s /dorado-0.2.1-linux-x64/bin/dorado /usr/local/bin/
+
+    # Install basecalling models
+    cd /dat
+    dorado download 
+
+    # Convert FAST5 into POD5
+    cd /dat
+    mkdir pod5s
+    pod5 convert fast5 fast5s/*.fast5 pod5s --output-one-to-one fast5s
+
+	# Simplex calling
+	
+    ## Call canonical bases
+    dorado basecaller dna_r10.4.1_e8.2_400bps_sup@v4.0.0 pod5s/ | samtools view -Sh > reads.bam
+
+    ## Call bases (including 5mCG and 5hmCG modifications)
+    dorado basecaller dna_r10.4.1_e8.2_400bps_sup@v4.0.0 pod5s/ --modified-bases 5mCG_5hmCG | samtools view -Sh > reads.bam
+
+
+    # Duplex calling
+
+	## Simplex call with --emit-moves
+	dorado basecaller dna_r10.4.1_e8.2_400bps_sup@v4.0.0 pod5s/ --emit-moves | samtools view -Sh > unmapped_reads_with_moves.bam
+
+	## Identify potential pairs
+	duplex_tools pair --output_dir ./pairs_from_bam unmapped_reads_with_moves.bam
+    
+    ## Stereo duplex basecall:
+    dorado duplex dna_r10.4.1_e8.2_400bps_sup@v4.0.0 pod5s/ --pairs pairs_from_bam/pair_ids_filtered.txt > reads_duplex.sam
 
 
 ## Megalodon pipeline setup - GCP
