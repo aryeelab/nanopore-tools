@@ -1,0 +1,10 @@
+version: 1.2
+tools:
+  - name: megalodon
+    subclass: WDL
+    primaryDescriptorPath: /megalodon.wdl
+    testParameterFiles:
+        - /megalodonsampleinput.json
+    authors:
+        - name: Mark Soliman
+          email: msoliman@ds.dfci.harvard.edu
