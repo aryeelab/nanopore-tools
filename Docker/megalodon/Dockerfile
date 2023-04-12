@@ -11,7 +11,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
 RUN wget -nv https://cdn.oxfordnanoportal.com/software/analysis/ont_guppy_5.0.16-1~focal_amd64.deb && \
   		apt -y install ./ont_guppy_5.0.16-1~focal_amd64.deb 
   
-# Install megalodon
-RUN pip install megalodon
+# Install megalodon and pod5 tools
+RUN pip install megalodon pod5
 
 RUN pip install ont-pyguppy-client-lib==5.0.16
