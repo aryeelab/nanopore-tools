@@ -6,7 +6,9 @@ workflow megalodon {
 		String sampledir
 		String device
 		String modmotifs
-		String outdir
+#		File samplepod5
+		File config
+#		String outdir
 		File sortedchromsize
 		File genome
 		File chromsizes
@@ -14,12 +16,15 @@ workflow megalodon {
 
 	call meg {
 		input:
+#			samplepod5=samplepod5,
 			sampledir=sampledir,
-			outdir=outdir,
+			config=config,
+#			outdir=outdir,
 			device=device,
 			modmotifs=modmotifs,
 			genome=genome
 	}
+
 	call QC {
 		input:
 			outbam=meg.outbam
@@ -33,12 +38,14 @@ workflow megalodon {
 	# 		chromsizes=chromsizes
 	# 		mappingsbed=bamtobed.mappingsbed
 	# }
+
 	call bedtobedgraph {
 		input:
-			outdir=outdir,
+#			outdir=outdir,
 			FivemCbed=meg.FivemCbed,
 			SixmAbed=meg.SixmAbed
 	}
+
 	call smoothing {
 		input:
 			sortedchromsize=sortedchromsize,
@@ -47,9 +54,10 @@ workflow megalodon {
 			SixmApercentbed=bedtobedgraph.SixmApercentbed,
 			SixmAcoveragebed=bedtobedgraph.SixmAcoveragebed
 	}
+
 	call bedgraphtobigwig {
 		input:
-			outdir=outdir,
+#			outdir=outdir,
 			FivemCpercentbedgraph=bedtobedgraph.FivemCpercentbedgraph,
 			FivemCcoveragebedgraph=bedtobedgraph.FivemCcoveragebedgraph,
 			SixmApercentbedgraph=bedtobedgraph.SixmApercentbedgraph,
@@ -60,6 +68,7 @@ workflow megalodon {
 			SixmApercentavgbedgraph=smoothing.SixmApercentavgbedgraph,
 			SixmAcoverageavgbedgraph=smoothing.SixmAcoverageavgbedgraph
 	}
+
 	output {
 		File FivemCpercentbg = bedtobedgraph.FivemCpercentbedgraph
 		File FivemCcoveragebg = bedtobedgraph.FivemCcoveragebedgraph
@@ -84,11 +93,14 @@ workflow megalodon {
 		description: "Workflow for turning nanopore sequencing output data into bigwigs"
 	}
 }
+
 task meg {
 	input {
+#		File samplepod5
 		String sampledir
-		String outdir
+#		String outdir
 		File genome
+		File config
 		String modmotifs
 		String device
 	}
@@ -96,14 +108,15 @@ task meg {
 		mkdir ./out
 		megalodon \
 		~{sampledir} \
-		--output-directory ~{outdir} \
+		--output-directory "./out" \
 		--overwrite \
 		--guppy-server-path /usr/bin/guppy_basecall_server \
-		--guppy-params "-d /aryeelab/nanopore/rerio/basecall_models/" \
-		--guppy-config res_dna_r941_min_modbases-all-context_v001.cfg \
+#		--guppy-params "-d /aryeelab/nanopore/rerio/basecall_models/" \
+		--guppy-config ~{config} \
 		--outputs basecalls mappings mod_mappings mods per_read_mods \
 		--reference ~{genome} ~{modmotifs} \
 		--devices ~{device}
+		tar czvf out.tar.gz ./out/*
 	>>>
 	runtime {
 		docker: "us-central1-docker.pkg.dev/aryeelab/docker/megalodon:latest"
@@ -112,9 +125,10 @@ task meg {
 		cpu: 16
 	}
 	output {
-		File FivemCbed = "${outdir}/modified_bases.5mC.bed"
-		File SixmAbed = "${outdir}/modified_bases.6mA.bed"
-		File outbam = "${outdir}/mappings.bam"
+		File FivemCbed = "./out/modified_bases.5mC.bed"
+		File SixmAbed = "./out/modified_bases.6mA.bed"
+		File outbam = "./out/mappings.bam"
+		File outtar = "out.tar.gz"
 	}
 }
 task QC {
@@ -175,7 +189,7 @@ task QC {
 # }
 task bedtobedgraph {
 	input {
-		String outdir
+#		String outdir
 		File FivemCbed
 		File SixmAbed
 	}
@@ -238,7 +252,7 @@ task smoothing {
 }
 task bedgraphtobigwig {
 	input {
-		String outdir
+#		String outdir
 		File FivemCpercentbedgraph
 		File FivemCcoveragebedgraph
 		File SixmApercentbedgraph
