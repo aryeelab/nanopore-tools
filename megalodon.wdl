@@ -3,7 +3,7 @@ version 1.0
 workflow megalodon {
 
 	input {
-		String sampledir
+		File reads
 		String device
 		String modmotifs
 #		File samplepod5
@@ -16,8 +16,7 @@ workflow megalodon {
 
 	call meg {
 		input:
-#			samplepod5=samplepod5,
-			sampledir=sampledir,
+			reads=reads,
 			config=config,
 #			outdir=outdir,
 			device=device,
@@ -83,7 +82,7 @@ workflow megalodon {
 		File SixmApercentsmooth = bedgraphtobigwig.SixmApercentsmooth
 		File SixmAcoveragesmooth = bedgraphtobigwig.SixmAcoveragesmooth
 		File basecoverage = QC.base_coverage
-		String reads = QC.num_reads
+		String numreads = QC.num_reads
 		# File mappingsbw = bedtobw.mappingsbw
 	}
 
@@ -96,8 +95,7 @@ workflow megalodon {
 
 task meg {
 	input {
-#		File samplepod5
-		String sampledir
+		File reads
 #		String outdir
 		File genome
 		File config
@@ -105,9 +103,11 @@ task meg {
 		String device
 	}
 	command <<<
+		mkdir ./in
+		tar vzxf ~{reads} -c ./in
 		mkdir ./out
 		megalodon \
-		~{sampledir} \
+		./in \
 		--output-directory "./out" \
 		--overwrite \
 		--guppy-server-path /usr/bin/guppy_basecall_server \
