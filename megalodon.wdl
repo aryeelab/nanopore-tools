@@ -104,7 +104,7 @@ task meg {
 	}
 	command <<<
 		mkdir ./in
-		tar vzxf ~{reads} -c ./in
+		tar zxvf ~{reads} -C ./in
 		mkdir ./out
 		megalodon \
 		./in \
