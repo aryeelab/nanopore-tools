@@ -30,15 +30,19 @@ Tools tested:
 
 #### Test datasets
 
-
 - NanoHiMe paper HepG2 Hia5/K27me3 [fast5](https://www.ebi.ac.uk/ena/browser/view/PRJEB47152).
 
 Local Kraken copy of run 1: `/aryeelab/users/mark/NanoHiMeref/HepG2H3K27me3_1/HepG2_nanoHiMe_H3K27me3_1.pod5`
 
-### 5mC reference datasets
+#### 5mC reference datasets
 
 - HepG2 CpG methylation (ENCODE WGBS) [bigbed](https://www.encodeproject.org/files/ENCFF857YRG/@@download/ENCFF857YRG.bigBed)
 
+#### 5mC output
+
+Dorado unmapped bam: 
+	- gs://fc-bd302969-686c-4e8d-a857-5c5bc13f265e/submissions/ff458a62-88a1-4570-8c5f-589e79c9dc53/dorado_basecall/fe20757f-14f9-487c-9bd7-e8bf6973d8ec/call-basecall/HepG2_nanoHiMe_H3K27me3_1.unmapped.bam
+	- /aryeelab/users/martin/projects/nanopore-benchmarking/dorado/HepG2_nanoHiMe_H3K27me3_1.unmapped.bam
 
 ### 6mA
 
@@ -46,6 +50,87 @@ Local Kraken copy of run 1: `/aryeelab/users/mark/NanoHiMeref/HepG2H3K27me3_1/He
 
 - HepG2 K27me3 (ENCODE ChIP-Seq) [bigwig](https://www.encodeproject.org/files/ENCFF419FUZ/@@download/ENCFF419FUZ.bigWig)
 
+
+## Converting FAST5 <-> POD5
+
+The commands below are run in a GCP VM to speed up transfer to/from GCP buckets:
+
+Create the VM:
+
+	gcloud compute instances create pod5-instance --project=aryeelab --zone=us-central1-a --machine-type=e2-highcpu-16 --network-interface=network-tier=PREMIUM,subnet=default --maintenance-policy=MIGRATE --provisioning-model=STANDARD --service-account=303574531351-compute@developer.gserviceaccount.com --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append --create-disk=auto-delete=yes,boot=yes,device-name=instance-1,image=projects/ubuntu-os-cloud/global/images/ubuntu-2204-jammy-v20230302,mode=rw,size=500,type=projects/aryeelab/zones/us-central1-a/diskTypes/pd-balanced --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --labels=ec-src=vm_add-gcloud --reservation-affinity=any
+
+SSH into the VM:
+
+	gcloud compute ssh --zone "us-central1-a" "pod5-instance" --project "aryeelab"
+
+Install pod5 tools and screen
+
+	sudo apt update
+	sudo apt -y install python3-pip screen
+	screen -dR
+    sudo pip install pod5
+    
+Download fast5s from bucket:
+
+	# Authenticate with GCP
+	gcloud auth login
+	
+	gsutil -m cp -r gs://griffin-lab/ONT_data/HEPG2-H3K27me3test .
+
+    # Convert a single FAST5 into a (small) POD5
+    pod5 convert fast5 -t 12 HEPG2-H3K27me3test/FAQ78510_5809c6e8_0.fast5 --output HEPG2-H3K27me3test-small.pod5
+
+    # Convert all FAST5s into a (large monolithic) POD5
+    # Trying to convert all fast5s into a monolithic pod5 directly fails (See https://github.com/nanoporetech/pod5-file-format/issues/33)
+    time pod5 convert fast5 HEPG2-H3K27me3test/*.fast5 --output pod5s/ --one-to-one ./HEPG2-H3K27me3test/
+
+    # Don't do this:
+    #time pod5 convert fast5 -t 12 HEPG2-H3K27me3test/*.fast5 --output HEPG2-H3K27me3test.pod5
+    
+Upload pod5s to bucket:
+
+ 	[TODO: gsutil cp ....]
+	
+
+## Map reads and make modified base BEDs (courtesy of Arsh Khetan)
+
+	# Install minimap2 as in https://github.com/aryeelab/nanopore-tools/blob/dev/Docker/minimap2/Dockerfile
+	# cp minimap2 /usr/local/bin
+	
+	# Install modbam2bed
+	sudo apt-get -y install autoconf libbz2-dev liblzma-dev libcurl4-openssl-dev libssl-dev
+	git clone --recursive https://github.com/epi2me-labs/modbam2bed.git
+	cd modbam2bed
+	make modbam2bed
+	sudo cp modbam2bed /usr/local/bin
+	
+	# Install bedGraphToBigWig
+	wget https://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64.v369/bedGraphToBigWig
+	sudo mv bedGraphToBigWig /usr/local/bin/
+
+	# Get genome fasta
+	gsutil cp gs://aryeelab/genome-fasta/Homo_sapiens.GRCh38.dna.primary_assembly.fa .
+	samtools faidx ${REF}
+	cut -f1,2 ${REF}.fai > ${REF}.chrom_sizes
+
+	SAMPLE="small_test_sample"
+
+	# Convert unaligned sam to fastq preserving base modification tags, then pipe into minimap2 for alignment and output an aligned sam file. The y tag carries modification info	
+	REF="Homo_sapiens.GRCh38.dna.primary_assembly.fa"
+	samtools fastq -T "*" ${SAMPLE}.unmapped.bam | minimap2 -ax map-ont -y $REF - > ${SAMPLE}.sam
+
+	# Drop secondary and supplmentary alignments. Sort. Index.
+	samtools view -bF 0*900 ${SAMPLE}.sam | samtools sort - > ${SAMPLE}.sorted.primary.bam
+	samtools index ${SAMPLE}.sorted.primary.bam
+	
+	# Make Bedmethyl file with modification info:
+	modbam2bed -t 12 -m 5mC --cpg ${REF} ${SAMPLE}.sorted.primary.bam > ${SAMPLE}.5mc_cpg.bed
+
+	# Convert BEDmethyl -> Bedgraph -> Bigwig
+	awk '$10 > 0 {printf "%s\t%d\t%d\t%2.3f\n" , $1,$2,$3,$11}' ${SAMPLE}.5mc_cpg.bed > ${SAMPLE}.5mc_cpg.bedgraph
+	bedGraphToBigWig ${SAMPLE}.5mc_cpg.bedgraph ${REF}.chrom_sizes ${SAMPLE}.5mc_cpg.bw
+
+	
 
 
 
