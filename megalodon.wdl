@@ -111,7 +111,6 @@ task meg {
 		--output-directory "./out" \
 		--overwrite \
 		--guppy-server-path /usr/bin/guppy_basecall_server \
-#		--guppy-params "-d /aryeelab/nanopore/rerio/basecall_models/" \
 		--guppy-config ~{config} \
 		--outputs basecalls mappings mod_mappings mods per_read_mods \
 		--reference ~{genome} ~{modmotifs} \
