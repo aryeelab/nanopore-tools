@@ -125,7 +125,7 @@ task meg {
         gpuCount: 1
         nvidiaDriverVersion: "470.161.03"
         zones: ["us-central1-a"] 
-		docker: "us-central1-docker.pkg.dev/aryeelab/docker/megalodon
+		docker: "us-central1-docker.pkg.dev/aryeelab/docker/megalodon"
 		memory: "64G"
 		disks: "local-disk 1000 SSD"
 		cpu: 12
