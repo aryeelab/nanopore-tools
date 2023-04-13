@@ -125,7 +125,7 @@ task meg {
 		docker: "us-central1-docker.pkg.dev/aryeelab/docker/megalodon:latest"
 		memory: "64G"
 		disks: "local-disk 1000 SSD"
-		cpu: 16
+		cpu: 12
 	}
 	output {
 		File FivemCbed = "./out/modified_bases.5mC.bed"
