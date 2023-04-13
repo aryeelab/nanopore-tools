@@ -118,6 +118,10 @@ task meg {
 		tar czvf out.tar.gz ./out/*
 	>>>
 	runtime {
+		gpuType: "nvidia-tesla-v100"
+        gpuCount: 1
+        nvidiaDriverVersion: "470.161.03"
+        zones: ["us-central1-a"] 
 		docker: "us-central1-docker.pkg.dev/aryeelab/docker/megalodon:latest"
 		memory: "64G"
 		disks: "local-disk 1000 SSD"
