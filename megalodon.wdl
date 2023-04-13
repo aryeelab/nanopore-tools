@@ -6,6 +6,7 @@ workflow megalodon {
 		File reads
 		String device
 		String modmotifs
+		File model
 #		File samplepod5
 		File config
 #		String outdir
@@ -16,6 +17,7 @@ workflow megalodon {
 
 	call meg {
 		input:
+			model=model,
 			reads=reads,
 			config=config,
 #			outdir=outdir,
@@ -96,6 +98,7 @@ workflow megalodon {
 task meg {
 	input {
 		File reads
+		File model
 #		String outdir
 		File genome
 		File config
@@ -106,11 +109,15 @@ task meg {
 		mkdir ./in
 		tar zxvf ~{reads} -C ./in
 		mkdir ./out
+		mkdir ./basecall_models
+		cp ~{model} ./basecall_models
+		cp ~{config} ./basecall_models
 		megalodon \
 		./in \
 		--output-directory "./out" \
 		--overwrite \
 		--guppy-server-path /usr/bin/guppy_basecall_server \
+		--guppy-params "-d ./basecall_models" \
 		--guppy-config ~{config} \
 		--outputs basecalls mappings mod_mappings mods per_read_mods \
 		--reference ~{genome} ~{modmotifs} \
