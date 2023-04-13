@@ -114,7 +114,7 @@ task meg {
 		--overwrite \
 		--guppy-server-path /usr/bin/guppy_basecall_server \
 		--guppy-params "-d ./basecall_models" \
-		--guppy-config ./basecall_models/res_dna_r941_min_modbases-all-context_v001.cfg \
+		--guppy-config res_dna_r941_min_modbases-all-context_v001.cfg \
 		--outputs basecalls mappings mod_mappings mods per_read_mods \
 		--reference ~{genome} ~{modmotifs} \
 		--devices ~{device}
