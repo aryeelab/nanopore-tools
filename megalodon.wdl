@@ -110,8 +110,7 @@ task meg {
 		tar zxvf ~{reads} -C ./in
 		mkdir ./out
 		mkdir ./basecall_models
-		cp ~{model} ./basecall_models
-		cp ~{config} ./basecall_models
+		tar zxvf ~{model} -C ./basecall_models
 		megalodon \
 		./in \
 		--output-directory "./out" \
