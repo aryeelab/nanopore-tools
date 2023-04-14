@@ -123,13 +123,13 @@ task meg {
 	>>>
 	runtime {
 		gpuType: "nvidia-tesla-v100"
-        gpuCount: 4
+        gpuCount: 1
         nvidiaDriverVersion: "470.161.03"
         zones: ["us-central1-a"] 
 		docker: "us-central1-docker.pkg.dev/aryeelab/docker/megalodon"
-		memory: "60G"
+		memory: "64G"
 		disks: "local-disk 1000 SSD"
-		cpu: 16
+		cpu: 12
 	}
 	output {
 		File FivemCbed = "./out/modified_bases.5mC.bed"
