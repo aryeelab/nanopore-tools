@@ -103,6 +103,7 @@ task meg {
 		String device
 	}
 	command <<<
+		nvidia-smi
 		mkdir ./in
 		tar zxvf ~{reads} -C ./in
 		mkdir ./out
