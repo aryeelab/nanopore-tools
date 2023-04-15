@@ -129,9 +129,9 @@ task meg {
         nvidiaDriverVersion: "470.161.03"
         zones: ["us-central1-a"] 
 		docker: "us-central1-docker.pkg.dev/aryeelab/docker/megalodon"
-		memory: "~{memory_gb}" + "G"
+		memory: "~{memory_gb} GB"
 		disks: "local-disk 1000 SSD"
-		cpu: "~{cpu}"
+		cpu: cpu
 	}
 	output {
 		File FivemCbed = "./out/modified_bases.5mC.bed"
