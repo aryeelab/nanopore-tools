@@ -99,6 +99,8 @@ task meg {
 		File model
 #		String outdir
 		File genome
+		String memory_gb = "64"
+		String cpu = "12"
 		String modmotifs
 		String device
 	}
@@ -127,9 +129,9 @@ task meg {
         nvidiaDriverVersion: "470.161.03"
         zones: ["us-central1-a"] 
 		docker: "us-central1-docker.pkg.dev/aryeelab/docker/megalodon"
-		memory: "64G"
+		memory: "~{memory}" + "G"
 		disks: "local-disk 1000 SSD"
-		cpu: 12
+		cpu: ~{cpu}
 	}
 	output {
 		File FivemCbed = "./out/modified_bases.5mC.bed"
