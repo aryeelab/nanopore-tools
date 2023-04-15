@@ -125,7 +125,7 @@ task meg {
 	>>>
 	runtime {
 		gpuType: "nvidia-tesla-v100"
-        gpuCount: 1
+        gpuCount: 2
         nvidiaDriverVersion: "470.161.03"
         zones: ["us-central1-a"] 
 		docker: "us-central1-docker.pkg.dev/aryeelab/docker/megalodon"
