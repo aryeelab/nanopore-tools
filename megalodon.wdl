@@ -217,9 +217,9 @@ task bedtobedgraph {
 	>>>
 	runtime {
 		docker: "us-central1-docker.pkg.dev/aryeelab/docker/bedops:latest"
-		memory: "64G"
-		disks: "local-disk 500 SSD"
-		cpu: 8
+		memory: "~{memory_gb} GB"
+		disks: "local-disk ~{disk_gb} SSD"
+		cpu: cpu
 	}
 	output {
 		File FivemCpercentbed = "FivemC.percentage.bed"
@@ -239,6 +239,9 @@ task smoothing {
 		File FivemCcoveragebed
 		File SixmApercentbed
 		File SixmAcoveragebed
+		Int memory_gb = 64
+		Int disk_gb = 500
+		Int cpu = 8			
 	}
 
 	command <<<
