@@ -201,6 +201,9 @@ task bedtobedgraph {
 #		String outdir
 		File FivemCbed
 		File SixmAbed
+		Int memory_gb = 128
+		Int disk_gb = 1000
+		Int cpu = 8		
 	}
 	command <<<
 		cat ~{FivemCbed} | awk '{ print $1"\t"$2"\t"$3"\tid-"NR"\t"$11; }' | sort-bed - > FivemC.percentage.bed
@@ -247,9 +250,9 @@ task smoothing {
 
 	runtime {
 		docker: "us-central1-docker.pkg.dev/aryeelab/docker/bedops:latest"
-		memory: "64G"
-		disks: "local-disk 500 SSD"
-		cpu: 8
+		memory: "~{memory_gb} GB"
+		disks: "local-disk ~{disk_gb} SSD"
+		cpu: cpu
 	}
 
 	output {
