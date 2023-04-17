@@ -9,6 +9,9 @@ tools:
     authors:
         - name: Mark Soliman
           email: msoliman@ds.dfci.harvard.edu
+  - name: nanopolish
+    subclass: WDL
+    primaryDescriptorPath: /nanopolish.wdl
 =======
 workflows:
    - name: dorado_basecall
