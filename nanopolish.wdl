@@ -1,0 +1,206 @@
+version 1.0
+
+workflow guppytonanopolish {
+
+	input {
+        File reads
+        String type
+        File genome
+        File config
+        File model
+        File sortedbed
+        File pythonscript
+	}
+
+	call guppy {
+		input:
+			reads=reads,
+            model=model,
+			config=config
+	}
+    call nanopolish {
+        input:
+            reads=reads,
+            allguppy=guppy.allguppy
+    }
+    call minimapalign {
+        input:
+            genome=genome,
+            allguppy=guppy.allguppy
+    }
+    call filter {
+        input:
+            sortedbam=minimapalign.sortedbam
+    }
+    call methylation {
+        input:
+            filteredbam=filter.filteredbam,
+            genome=genome,
+            type=type,
+            nanoindex=nanopolish.nanoindex,
+            allguppy=guppy.allguppy,
+            filteredbai=filter.filteredbai,
+            nanofastaindex=nanopolish.nanofastaindex,
+            nanoindexgzi=nanopolish.nanoindexgzi,
+            nanoreaddb=nanopolish.nanoreaddb,
+            pythonscript = pythonscript
+    }
+    call nanotobed {
+        input:
+            sortedbed=sortedbed,
+            methylationfreq=methylation.methylationfreq
+    }
+    output {
+        File allguppy = guppy.allguppy
+        File filteredbam = filter.filteredbam
+        File methylationfreq = methylation.methylationfreq
+        File FivemCbed = nanotobed.FivemCbed
+        File FivemCavgbedgraph = nanotobed.FivemCavgbedgraph
+	}
+
+	meta {
+		author: ""
+		email:""
+		description: "Workflow for using guppy and nanopolish to process nanopore output"
+	}
+}
+task guppy {
+    input {
+        File reads
+        File config
+        File model
+    }
+    command <<<
+    mkdir ./samples
+    tar zxvf ~{reads} -C ./samples
+    mkdir ./out
+    guppy_basecaller -i ./samples -s ./out -c ~{config} -m ~{model} -x "cuda:all" --num_callers 4 --gpu_runners_per_device 4
+    cat ./out/**/*.fastq > ./out/allguppy.fastq
+    >>>
+    runtime {
+        gpuType: "nvidia-tesla-v100"
+        gpuCount: 1
+        nvidiaDriverVersion: "470.161.03"
+        zones: ["us-central1-a"] 
+		docker: "us-central1-docker.pkg.dev/aryeelab/docker/megalodon"
+		memory: "64 GB"
+		disks: "local-disk 1000 SSD"
+		cpu: 12
+    }
+    output {
+        File allguppy = "./out/allguppy.fastq"
+    }
+}
+
+task nanopolish {
+    input {
+        File allguppy
+        File reads
+    }
+    command <<<
+    mkdir ./index
+    cp ~{allguppy} ./index/
+    mkdir ./samples
+    tar zxvf ~{reads} -C ./samples
+    nanopolish index -d ./samples ./index/allguppy.fastq
+    >>>
+    runtime {
+        docker: "us-central1-docker.pkg.dev/aryeelab/docker/nanopolish:latest"
+		memory: "64G"
+		disks: "local-disk 1000 SSD"
+		cpu: 16 
+    }
+    output {
+        File nanoindex = "./index/allguppy.fastq.index"
+        File nanofastaindex = "./index/allguppy.fastq.index.fai"
+        File nanoindexgzi = "./index/allguppy.fastq.fastq.index.gzi"
+        File nanoreaddb = "./index/allguppy.fastq.index.readdb"
+    }
+}
+task minimapalign {
+    input {
+        File allguppy
+        File genome
+    }
+    command <<<
+    minimap2 -a -x map-ont ~{genome} ~{allguppy} | samtools sort -T tmp -o sorted.bam
+    samtools index sorted.bam
+    >>>
+    runtime {
+        docker: "us-central1-docker.pkg.dev/aryeelab/docker/minimap2:latest"
+		memory: "64G"
+		disks: "local-disk 500 SSD"
+		cpu: 8
+    }
+    output {
+        File sortedbam = "sorted.bam"
+    }
+}
+task filter {
+    input {
+        File sortedbam
+    }
+    command <<<
+    samtools view -bh -q 50 ~{sortedbam} > filtered.bam
+    samtools index filtered.bam
+    >>>
+    runtime {
+        docker: "us-central1-docker.pkg.dev/aryeelab/docker/samtools:latest"
+		memory: "64G"
+		disks: "local-disk 500 SSD"
+		cpu: 8
+    }
+    output {
+        File filteredbam = "filtered.bam"
+        File filteredbai = "filtered.bam.bai"
+    }
+}
+task methylation {
+    input {
+        File allguppy
+        File filteredbam
+        File filteredbai
+        File nanoindex
+        File nanofastaindex
+        File nanoindexgzi
+        File nanoreaddb
+        File genome
+        String type
+        File pythonscript
+    }
+    command <<<
+    mkdir ./temp
+    cp ~{allguppy} ~{filteredbam} ~{filteredbai} ~{nanoindex} ~{nanofastaindex} ~{nanoindexgzi} ~{nanoreaddb} ./temp/
+    nanopolish call-methylation --methylation=~{type} -t 8 -r ./temp/allguppy.fastq -b ./temp/filtered.bam -g ~{genome} > methylationcalls.tsv
+    python ~{pythonscript} methylationcalls.tsv > methylationfrequency.tsv
+    >>>
+    runtime {
+        docker: "us-central1-docker.pkg.dev/aryeelab/docker/nanopolish:latest"
+		memory: "64G"
+		disks: "local-disk 500 SSD"
+		cpu: 8
+    }
+    output {
+        File methylationfreq = "methylationfrequency.tsv"
+    }
+}
+task nanotobed {
+    input {
+        File methylationfreq
+        File sortedbed
+    }
+    command <<<
+    tail -n +2 ~{methylationfreq} | awk '{ print $1"\t"$2"\t"$3+1"\tid-"NR"\t"$7; }' | sort-bed - > FivemC.percentage.bed
+    bedops --chop 1000 ~{sortedbed} | bedmap --faster --echo --mean --count --delim "\t" --skip-unmapped - FivemC.percentage.bed | cat | cut -f 1,2,3,4 | sort -k1,1 -k2,2n > nanopolish5mC.1k.bedgraph
+    >>>
+    runtime {
+        docker: "us-central1-docker.pkg.dev/aryeelab/docker/bedops:latest"
+		memory: "64G"
+		disks: "local-disk 500 SSD"
+		cpu: 8
+    }
+    output {
+        File FivemCbed = "FivemC.percentage.bed"
+        File FivemCavgbedgraph = "nanopolish5mC.1k.bedgraph"
+    }
+}
