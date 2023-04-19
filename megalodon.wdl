@@ -69,6 +69,8 @@ workflow megalodon {
 	}
 
 	output {
+		File FivemCpercentbed = meg.FivemCbed
+		File SixmAcoveragebed = meg.SixmAbed
 		File FivemCpercentbg = bedtobedgraph.FivemCpercentbedgraph
 		File FivemCcoveragebg = bedtobedgraph.FivemCcoveragebedgraph
 		File SixmApercentbg = bedtobedgraph.SixmApercentbedgraph
