@@ -1,17 +1,15 @@
-FROM ubuntu
+FROM ubuntu:20.04
 	
 RUN apt-get update && apt-get install -y \
-		build-essential \
-    	git \
     	samtools \
     	zlib1g-dev \
+		bzip2 \
+		curl &&\
+		apt-get autoclean \
     	&& rm -rf /var/lib/apt/lists/*
 	
-RUN git clone https://github.com/lh3/minimap2
+RUN curl -L https://github.com/lh3/minimap2/releases/download/v2.24/minimap2-2.24_x64-linux.tar.bz2 | tar -jxvf - && \
+ mkdir /data
 
-RUN cd minimap2 && \
-	if [ "$(uname -m)" = "aarch64" ]; then \
-    	make arm_neon=1 aarch64=1; \
-    else \
-        make; \
-    fi
+ENV PATH="${PATH}:/minimap2-2.24_x64-linux"
+WORKDIR /data

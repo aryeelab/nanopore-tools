@@ -34,8 +34,10 @@ RUN cd / && \
 
 ENV HDF5_PLUGIN_PATH /usr/local/hdf5/lib/plugin
 
+ENV PATH="/nanopolish:${PATH}"
 ARG VERSION=__specify_in_build_arg__
 RUN echo $VERSION > /VERSION
 
 WORKDIR /nanopolish
 
+ENTRYPOINT [ "nanopolish" ]
