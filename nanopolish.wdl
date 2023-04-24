@@ -36,6 +36,7 @@ workflow guppytonanopolish {
         input:
             filteredbam=filter.filteredbam,
             genome=genome,
+            reads=reads,
             type=type,
             nanoindex=nanopolish.nanoindex,
             allguppy=guppy.allguppy,
@@ -157,6 +158,7 @@ task filter {
 }
 task methylation {
     input {
+        File reads
         File allguppy
         File filteredbam
         File filteredbai
@@ -169,6 +171,8 @@ task methylation {
         File pythonscript
     }
     command <<<
+    mkdir ./samples
+    tar zxvf ~{reads} -C ./samples
     mkdir ./temp
     cp ~{allguppy} ~{filteredbam} ~{filteredbai} ~{nanoindex} ~{nanofastaindex} ~{nanoindexgzi} ~{nanoreaddb} ./temp/
     nanopolish call-methylation --methylation=~{type} -t 8 -r ./temp/allguppy.fastq -b ./temp/filtered.bam -g ~{genome} > methylationcalls.tsv
