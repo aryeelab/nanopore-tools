@@ -2,7 +2,7 @@
 FROM ubuntu:18.04
 
 RUN apt-get update && apt-get -y upgrade &&\
-    apt-get install -y libc6-dev build-essential tcsh devscripts debhelper wget tar git &&\
+    apt-get -y install libc6-dev build-essential tcsh devscripts debhelper wget tar git python3 &&\
     apt-get clean && apt-get purge &&\
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 

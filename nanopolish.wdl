@@ -43,18 +43,18 @@ workflow guppytonanopolish {
             filteredbai=filter.filteredbai,
             nanofastaindex=nanopolish.nanofastaindex,
             nanoindexgzi=nanopolish.nanoindexgzi,
-            nanoreaddb=nanopolish.nanoreaddb,
-            pythonscript = pythonscript
+            nanoreaddb=nanopolish.nanoreaddb
     }
     call nanotobed {
         input:
             sortedbed=sortedbed,
-            methylationfreq=methylation.methylationfreq
+            pythonscript=pythonscript,
+            methylationcalls=methylation.methylationcalls
     }
     output {
         File allguppy = guppy.allguppy
         File filteredbam = filter.filteredbam
-        File methylationfreq = methylation.methylationfreq
+        File methylationfreq = methylation.methylationcalls
         File FivemCbed = nanotobed.FivemCbed
         File FivemCavgbedgraph = nanotobed.FivemCavgbedgraph
 	}
@@ -168,7 +168,6 @@ task methylation {
         File nanoreaddb
         File genome
         String type
-        File pythonscript
     }
     command <<<
     mkdir ./samples
@@ -176,7 +175,6 @@ task methylation {
     mkdir ./temp
     cp ~{allguppy} ~{filteredbam} ~{filteredbai} ~{nanoindex} ~{nanofastaindex} ~{nanoindexgzi} ~{nanoreaddb} ./temp/
     nanopolish call-methylation --methylation=~{type} -t 8 -r ./temp/allguppy.fastq -b ./temp/filtered.bam -g ~{genome} > methylationcalls.tsv
-    python ~{pythonscript} methylationcalls.tsv > methylationfrequency.tsv
     >>>
     runtime {
         docker: "us-central1-docker.pkg.dev/aryeelab/docker/nanopolish:latest"
@@ -185,16 +183,18 @@ task methylation {
 		cpu: 8
     }
     output {
-        File methylationfreq = "methylationfrequency.tsv"
+        File methylationcalls = "methylationcalls.tsv"
     }
 }
 task nanotobed {
     input {
-        File methylationfreq
+        File pythonscript
+        File methylationcalls
         File sortedbed
     }
     command <<<
-    tail -n +2 ~{methylationfreq} | awk '{ print $1"\t"$2"\t"$3+1"\tid-"NR"\t"$7; }' | sort-bed - > FivemC.percentage.bed
+    python3 ~{pythonscript} ~{methylationcalls} > methylationfrequency.tsv
+    tail -n +2 methylationfrequency.tsv | awk '{ print $1"\t"$2"\t"$3+1"\tid-"NR"\t"$7; }' | sort-bed - > FivemC.percentage.bed
     bedops --chop 1000 ~{sortedbed} | bedmap --faster --echo --mean --count --delim "\t" --skip-unmapped - FivemC.percentage.bed | cat | cut -f 1,2,3,4 | sort -k1,1 -k2,2n > nanopolish5mC.1k.bedgraph
     >>>
     runtime {
