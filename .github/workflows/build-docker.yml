@@ -8,7 +8,7 @@ jobs:
   build-docker:
     strategy:
       matrix:
-        IMAGE_NAME: ['dorado', 'megalodon', 'minimap2', 'nanopolish', 'bedops']
+        IMAGE_NAME: ['dorado', 'megalodon', 'minimap2', 'nanopolish', 'bedops', 'bedtools']
 
     name: Build Docker
     runs-on: ubuntu-latest  

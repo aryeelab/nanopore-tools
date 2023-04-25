@@ -10,6 +10,7 @@ workflow guppytonanopolish {
         File model
         File sortedbed
         File pythonscript
+        File chromsizes
 	}
 
 	call guppy {
@@ -51,12 +52,18 @@ workflow guppytonanopolish {
             pythonscript=pythonscript,
             methylationcalls=methylation.methylationcalls
     }
+    call bedtobigwig {
+        input:
+            chromsizes=chromsizes,
+            FivemCavgbedgraph=nanotobed.FivemCavgbedgraph
+    }
     output {
         File allguppy = guppy.allguppy
         File filteredbam = filter.filteredbam
         File methylationfreq = methylation.methylationcalls
         File FivemCbed = nanotobed.FivemCbed
         File FivemCavgbedgraph = nanotobed.FivemCavgbedgraph
+        File FivemCavgbw = bedtobigwig.FivemCavgbw
 	}
 
 	meta {
@@ -206,5 +213,23 @@ task nanotobed {
     output {
         File FivemCbed = "FivemC.percentage.bed"
         File FivemCavgbedgraph = "nanopolish5mC.1k.bedgraph"
+    }
+}
+task bedtobigwig {
+    input {
+        File FivemCavgbedgraph
+        File chromsizes
+    }
+    command <<<
+    bedGraphToBigWig ~{FivemCavgbedgraph} ~{chromsizes} FivemCavg.bw
+    >>>
+    runtime {
+        docker: "us-central1-docker.pkg.dev/aryeelab/docker/bedtools:latest"
+		memory: "64G"
+		disks: "local-disk 500 SSD"
+		cpu: 8
+    }
+    output {
+        File FivemCavgbw = "FivemCavg.bw"
     }
 }
