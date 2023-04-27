@@ -1,15 +1,15 @@
 version 1.0
 
-workflow guppytonanopolish {
+workflow nanohime {
 
 	input {
         File reads
-        String type
         File genome
         File config
         File model
-        File sortedbed
+        File nanohimetar
         File pythonscript
+        File sortedbed
         File chromsizes
 	}
 
@@ -33,38 +33,43 @@ workflow guppytonanopolish {
         input:
             sortedbam=minimapalign.sortedbam
     }
-    call methylation {
+    call eventalign {
         input:
-            filteredbam=filter.filteredbam,
-            genome=genome,
-            reads=reads,
-            type=type,
-            nanoindex=nanopolish.nanoindex,
-            allguppy=guppy.allguppy,
-            filteredbai=filter.filteredbai,
-            nanofastaindex=nanopolish.nanofastaindex,
-            nanoindexgzi=nanopolish.nanoindexgzi,
-            nanoreaddb=nanopolish.nanoreaddb
+        allguppy=guppy.allguppy,
+        filteredbam=filter.filteredbam,
+        filteredbai=filter.filteredbai,
+        nanoindex=nanopolish.nanoindex,
+        nanofastaindex=nanopolish.nanofastaindex,
+        nanoindexgzi=nanopolish.nanoindexgzi,
+        nanoreaddb=nanopolish.nanoreaddb,
+        genome=genome
     }
-    call nanotobed {
+    call hime {
         input:
+            genome=genome,
+            eventaligntxt=eventalign.eventaligntxt,
+            nanohimetar=nanohimetar
+    }
+    call tobed {
+        input:
+            FivemCmethylation=hime.FivemCmethylation,
+            SixmAmethylation=hime.SixmAmethylation,
             sortedbed=sortedbed,
-            type=type,
-            pythonscript=pythonscript,
-            methylationcalls=methylation.methylationcalls
+            pythonscript=pythonscript
     }
     call bedtobigwig {
         input:
-            chromsizes=chromsizes,
-            FivemCavgbedgraph=nanotobed.FivemCavgbedgraph
+            FivemCavgbedgraph=tobed.FivemCavgbedgraph,
+            SixmAavgbedgraph=tobed.SixmAavgbedgraph,
+            chromsizes=chromsizes
     }
     output {
         File allguppy = guppy.allguppy
         File filteredbam = filter.filteredbam
-        File methylationfreq = methylation.methylationcalls
-        File FivemCbed = nanotobed.FivemCbed
-        File FivemCavgbedgraph = nanotobed.FivemCavgbedgraph
+        File FivemCbed = tobed.FivemCbed
+        File SixmAbed = tobed.SixmAbed
         File FivemCavgbw = bedtobigwig.FivemCavgbw
+        File SixmAavgbw = bedtobigwig.SixmAavgbw
 	}
 
 	meta {
@@ -122,7 +127,7 @@ task nanopolish {
     output {
         File nanoindex = "./index/allguppy.fastq.index"
         File nanofastaindex = "./index/allguppy.fastq.index.fai"
-        File nanoindexgzi = "./index/allguppy.fastq.index.gzi"
+        File nanoindexgzi = "./index/allguppy.fastq.fastq.index.gzi"
         File nanoreaddb = "./index/allguppy.fastq.index.readdb"
     }
 }
@@ -164,9 +169,8 @@ task filter {
         File filteredbai = "filtered.bam.bai"
     }
 }
-task methylation {
+task eventalign {
     input {
-        File reads
         File allguppy
         File filteredbam
         File filteredbai
@@ -175,14 +179,11 @@ task methylation {
         File nanoindexgzi
         File nanoreaddb
         File genome
-        String type
     }
     command <<<
-    mkdir ./samples
-    tar zxvf ~{reads} -C ./samples
     mkdir ./temp
     cp ~{allguppy} ~{filteredbam} ~{filteredbai} ~{nanoindex} ~{nanofastaindex} ~{nanoindexgzi} ~{nanoreaddb} ./temp/
-    nanopolish call-methylation --methylation=~{type} -t 8 -r ./temp/allguppy.fastq -b ./temp/filtered.bam -g ~{genome} > methylationcalls.tsv
+    nanopolish eventalign -n -t 16 --reads ./temp/allguppy.fastq --bam ./temp/filtered.bam --genome ~{genome} --scale-events > out.eventalign.txt
     >>>
     runtime {
         docker: "us-central1-docker.pkg.dev/aryeelab/docker/nanopolish:latest"
@@ -191,20 +192,50 @@ task methylation {
 		cpu: 8
     }
     output {
-        File methylationcalls = "methylationcalls.tsv"
+        File eventaligntxt = "out.eventalign.txt"
     }
 }
-task nanotobed {
+task hime {
     input {
-        File pythonscript
-        File methylationcalls
-        File sortedbed
-        String type
+        File genome
+        File eventaligntxt
+        File nanohimetar
     }
     command <<<
-    python3 ~{pythonscript} -s -m ~{type} ~{methylationcalls} > methylationfrequency.tsv
-    tail -n +2 methylationfrequency.tsv | awk '{ print $1"\t"$2"\t"$3+1"\tid-"NR"\t"$7; }' | sort-bed - > FivemC.percentage.bed
-    bedops --chop 1000 ~{sortedbed} | bedmap --faster --echo --mean --count --delim "\t" --skip-unmapped - FivemC.percentage.bed | cat | cut -f 1,2,3,4 | sort -k1,1 -k2,2n > nanopolish5mC.1k.bedgraph
+    mkdir ./temp
+    tar zxvf ~{nanohimetar} -C ./temp
+    perl ./temp/nanoHiMe-main/perl_script/upper.pl ~{genome} > ./temp/ref_upper.fa
+    samtools faidx ./temp/ref_upper.fa
+    ./temp/nanoHiMe-main/nanoHiMe 6mA ref_upper.fa ~{eventaligntxt} output.6mA 50 50
+    echo -e "chromosome\tstrand\tstart\tend\tread\tlog_lik_ratio\tsequence" | cat - output.6mA.methylation.txt > SixmAmethylation.tsv
+    ./temp/nanoHiMe-main/nanoHiMe mCG ref_upper.fa ~{eventaligntxt} output.mCG
+    echo -e "chromosome\tstrand\tstart\tend\tread\tlog_lik_ratio\tsequence" | cat - output.mcG.methylation.txt > FivemCmethylation.tsv
+    >>>
+    runtime {
+        docker: "us-central1-docker.pkg.dev/aryeelab/docker/nanohime:latest"
+		memory: "64G"
+		disks: "local-disk 500 SSD"
+		cpu: 8
+    }
+    output {
+        File SixmAmethylation = "SixmAmethylation.tsv"
+        File FivemCmethylation = "FivemCmethylation.tsv"
+    }
+}
+task tobed {
+    input {
+        File SixmAmethylation
+        File FivemCmethylation
+        File pythonscript
+        File sortedbed
+    }
+    command <<<
+    python3 ~{pythonscript} -s -m CG ~{FivemCmethylation} > FivemCmethylationfrequency.tsv
+    tail -n +2 FivemCmethylationfrequency.tsv | awk '{ print $1"\t"$2"\t"$3+1"\tid-"NR"\t"$7; }' | sort-bed - > FivemC.percentage.bed
+    bedops --chop 1000 ~{sortedbed} | bedmap --faster --echo --mean --count --delim "\t" --skip-unmapped - FivemC.percentage.bed | cat | cut -f 1,2,3,4 | sort -k1,1 -k2,2n > 5mC.1k.bedgraph
+    python3 ~{pythonscript} -s -m CG ~{SixmAmethylation} > SixmAmethylationfrequency.tsv
+    tail -n +2 SixmAmethylationfrequency.tsv | awk '{ print $1"\t"$2"\t"$3+1"\tid-"NR"\t"$7; }' | sort-bed - > SixmA.percentage.bed
+    bedops --chop 1000 ~{sortedbed} | bedmap --faster --echo --mean --count --delim "\t" --skip-unmapped - SixmA.percentage.bed | cat | cut -f 1,2,3,4 | sort -k1,1 -k2,2n > 6mA.1k.bedgraph
     >>>
     runtime {
         docker: "us-central1-docker.pkg.dev/aryeelab/docker/bedops:latest"
@@ -214,16 +245,20 @@ task nanotobed {
     }
     output {
         File FivemCbed = "FivemC.percentage.bed"
-        File FivemCavgbedgraph = "nanopolish5mC.1k.bedgraph"
+        File FivemCavgbedgraph = "5mC.1k.bedgraph"
+        File SixmAbed = "SixmA.percentage.bed"
+        File SixmAavgbedgraph = "6mA.1k.bedgraph"
     }
 }
 task bedtobigwig {
     input {
         File FivemCavgbedgraph
+        File SixmAavgbedgraph
         File chromsizes
     }
     command <<<
     bedGraphToBigWig ~{FivemCavgbedgraph} ~{chromsizes} FivemCavg.bw
+    bedGraphToBigWig ~{SixmAavgbedgraph} ~{chromsizes} SixmAavg.bw
     >>>
     runtime {
         docker: "us-central1-docker.pkg.dev/aryeelab/docker/bedtools:latest"
@@ -233,5 +268,6 @@ task bedtobigwig {
     }
     output {
         File FivemCavgbw = "FivemCavg.bw"
+        File SixmAavgbw = "SixmAavg.bw"
     }
 }
