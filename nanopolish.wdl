@@ -5,6 +5,7 @@ workflow guppytonanopolish {
 	input {
         File reads
         String type
+        String typeagain
         File genome
         File config
         File model
@@ -49,7 +50,7 @@ workflow guppytonanopolish {
     call nanotobed {
         input:
             sortedbed=sortedbed,
-            type=type,
+            typeagain=typeagain,
             pythonscript=pythonscript,
             methylationcalls=methylation.methylationcalls
     }
@@ -199,10 +200,10 @@ task nanotobed {
         File pythonscript
         File methylationcalls
         File sortedbed
-        String type
+        String typeagain
     }
     command <<<
-    python3 ~{pythonscript} -s -m ~{type} ~{methylationcalls} > methylationfrequency.tsv
+    python3 ~{pythonscript} -s -m ~{typeagain} ~{methylationcalls} > methylationfrequency.tsv
     tail -n +2 methylationfrequency.tsv | awk '{ print $1"\t"$2"\t"$3+1"\tid-"NR"\t"$7; }' | sort-bed - > FivemC.percentage.bed
     bedops --chop 1000 ~{sortedbed} | bedmap --faster --echo --mean --count --delim "\t" --skip-unmapped - FivemC.percentage.bed | cat | cut -f 1,2,3,4 | sort -k1,1 -k2,2n > nanopolish5mC.1k.bedgraph
     >>>

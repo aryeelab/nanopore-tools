@@ -233,7 +233,7 @@ task tobed {
     python3 ~{pythonscript} -s -m CG ~{FivemCmethylation} > FivemCmethylationfrequency.tsv
     tail -n +2 FivemCmethylationfrequency.tsv | awk '{ print $1"\t"$2"\t"$3+1"\tid-"NR"\t"$7; }' | sort-bed - > FivemC.percentage.bed
     bedops --chop 1000 ~{sortedbed} | bedmap --faster --echo --mean --count --delim "\t" --skip-unmapped - FivemC.percentage.bed | cat | cut -f 1,2,3,4 | sort -k1,1 -k2,2n > 5mC.1k.bedgraph
-    python3 ~{pythonscript} -s -m CG ~{SixmAmethylation} > SixmAmethylationfrequency.tsv
+    python3 ~{pythonscript} -s -m A ~{SixmAmethylation} > SixmAmethylationfrequency.tsv
     tail -n +2 SixmAmethylationfrequency.tsv | awk '{ print $1"\t"$2"\t"$3+1"\tid-"NR"\t"$7; }' | sort-bed - > SixmA.percentage.bed
     bedops --chop 1000 ~{sortedbed} | bedmap --faster --echo --mean --count --delim "\t" --skip-unmapped - SixmA.percentage.bed | cat | cut -f 1,2,3,4 | sort -k1,1 -k2,2n > 6mA.1k.bedgraph
     >>>
