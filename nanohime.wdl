@@ -206,9 +206,9 @@ task hime {
     tar zxvf ~{nanohimetar} -C ./temp
     perl ./temp/nanoHiMe-main/perl_script/upper.pl ~{genome} > ./temp/ref_upper.fa
     samtools faidx ./temp/ref_upper.fa
-    ./temp/nanoHiMe-main/nanoHiMe 6mA ref_upper.fa ~{eventaligntxt} output.6mA 50 50
+    ./temp/nanoHiMe-main/nanoHiMe 6mA ./temp/ref_upper.fa ~{eventaligntxt} output.6mA 50 50
     echo -e "chromosome\tstrand\tstart\tend\tread\tlog_lik_ratio\tsequence" | cat - output.6mA.methylation.txt > SixmAmethylation.tsv
-    ./temp/nanoHiMe-main/nanoHiMe mCG ref_upper.fa ~{eventaligntxt} output.mCG
+    ./temp/nanoHiMe-main/nanoHiMe mCG ./temp/ref_upper.fa ~{eventaligntxt} output.mCG
     echo -e "chromosome\tstrand\tstart\tend\tread\tlog_lik_ratio\tsequence" | cat - output.mcG.methylation.txt > FivemCmethylation.tsv
     >>>
     runtime {
