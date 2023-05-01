@@ -127,7 +127,7 @@ task nanopolish {
     output {
         File nanoindex = "./index/allguppy.fastq.index"
         File nanofastaindex = "./index/allguppy.fastq.index.fai"
-        File nanoindexgzi = "./index/allguppy.fastq.fastq.index.gzi"
+        File nanoindexgzi = "./index/allguppy.fastq.index.gzi"
         File nanoreaddb = "./index/allguppy.fastq.index.readdb"
     }
 }
