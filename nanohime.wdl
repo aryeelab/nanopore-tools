@@ -36,6 +36,7 @@ workflow nanohime {
     call eventalign {
         input:
         allguppy=guppy.allguppy,
+        reads=reads,
         filteredbam=filter.filteredbam,
         filteredbai=filter.filteredbai,
         nanoindex=nanopolish.nanoindex,
@@ -179,8 +180,11 @@ task eventalign {
         File nanoindexgzi
         File nanoreaddb
         File genome
+        File reads
     }
     command <<<
+    mkdir ./samples
+    tar zxvf ~{reads} -C ./samples
     mkdir ./temp
     cp ~{allguppy} ~{filteredbam} ~{filteredbai} ~{nanoindex} ~{nanofastaindex} ~{nanoindexgzi} ~{nanoreaddb} ./temp/
     nanopolish eventalign -n -t 16 --reads ./temp/allguppy.fastq --bam ./temp/filtered.bam --genome ~{genome} --scale-events > out.eventalign.txt
