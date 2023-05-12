@@ -3,6 +3,8 @@ version 1.0
 workflow dorado_basecall {
 
     input {
+        File genome
+        File chromsizes
         String sample_id
         File fast5_archive
         String basecall_model
@@ -14,15 +16,28 @@ workflow dorado_basecall {
             fast5_archive = fast5_archive,
             basecall_model = basecall_model
     }
-    call makefastqs {
+    call minimapalign {
         input:
-            unmapped_bam = basecall.unmapped_bam
+            unmapped_bam = basecall.unmapped_bam,
+            genome = genome
+    }
+    call filter {
+        input:
+            sortedbam = minimapalign.sortedbam
+    }
+    call bamtobigwig {
+        input:
+            chromsizes = chromsizes,
+            genome = genome,
+            filteredbai = filter.filteredbai,
+            filteredbam = filter.filteredbam
     }
     output {
+        File FivemCcpgbedgraph = bamtobigwig.FivemCcpgbedgraph
+        File FivemCcpgbw = bamtobigwig.FivemCcpgbedgraph
         File unmapped_bam = basecall.unmapped_bam
         File? duplex_unmapped_bam = basecall.duplex_unmapped_bam
         File? pairs = basecall.pairs
-        File fastq = makefastqs.fastq
     }
 
     meta {
@@ -92,12 +107,32 @@ task basecall  {
         File? pairs = "pairs/pair_ids_filtered.txt"
     }
 }
-task makefastqs {
+task minimapalign {
     input {
         File unmapped_bam
+        File genome
     }
     command <<<
-        samtools fastq -T "*" ~{unmapped_bam} > out.fastq
+    samtools fastq -T "*" ~{unmapped_bam} | minimap2 -a -x map-ont ~{genome} | samtools sort -T tmp -o sorted.bam
+    samtools index sorted.bam
+    >>>
+    runtime {
+        docker: "us-central1-docker.pkg.dev/aryeelab/docker/minimap2:latest"
+		memory: "64G"
+		disks: "local-disk 500 SSD"
+		cpu: 8
+    }
+    output {
+        File sortedbam = "sorted.bam"
+    }
+}
+task filter {
+    input {
+        File sortedbam
+    }
+    command <<<
+    samtools view -bh -q 50 ~{sortedbam} > filtered.bam
+    samtools index filtered.bam
     >>>
     runtime {
         docker: "us-central1-docker.pkg.dev/aryeelab/docker/samtools:latest"
@@ -106,6 +141,30 @@ task makefastqs {
 		cpu: 8
     }
     output {
-        File fastq = "out.fastq"
+        File filteredbam = "filtered.bam"
+        File filteredbai = "filtered.bam.bai"
+    }
+}
+task bamtobigwig {
+    input {
+        File genome
+        File chromsizes
+        File filteredbam
+        File filteredbai
+    }
+    command <<<
+    modbam2bed -t 12 -m 5mC --cpg ~{genome} ~{filteredbam} > big5mC.cpg.bed
+    awk '$10 > 0 {printf "%s\t%d\t%d\t%2.3f\n" , $1,$2,$3,$11}' | sort -k1,1 -k2,2n > 5mC.cpg.bedgraph
+    bedGraphToBigWig 5mC.cpg.bedgraph ~{chromsizes} 5mC.cpg.bw
+    >>>
+    runtime {
+        docker: "us-central1-docker.pkg.dev/aryeelab/docker/bedtools:latest"
+		memory: "64G"
+		disks: "local-disk 500 SSD"
+		cpu: 8
+    }
+    output {
+        File FivemCcpgbw = "5mC.cpg.bw"
+        File FivemCcpgbedgraph = "5mC.cpg.bedgraph"
     }
 }

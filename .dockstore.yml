@@ -12,6 +12,9 @@ tools:
   - name: nanopolish
     subclass: WDL
     primaryDescriptorPath: /nanopolish.wdl
+  - name: demux
+    subclass: WDL
+    primaryDescriptorPath: /demux.wdl
 =======
 workflows:
    - name: dorado_basecall
