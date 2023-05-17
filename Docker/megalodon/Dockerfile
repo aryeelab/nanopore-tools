@@ -8,12 +8,12 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
   		ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime
 
 # Install guppy
-RUN wget -nv https://cdn.oxfordnanoportal.com/software/analysis/ont_guppy_5.0.16-1~focal_amd64.deb && \
-  		apt -y install ./ont_guppy_5.0.16-1~focal_amd64.deb 
+RUN wget -nv https://cdn.oxfordnanoportal.com/software/analysis/ont_guppy_6.4.6-1~focal_amd64.deb && \
+  		apt -y install ./ont_guppy_6.4.6-1~focal_amd64.deb 
   
 # Install megalodon and pod5 tools
 # Note that numpy<1.24 is needed since megalodon uses 'np.int' rather than 'int' (deprecated/removed in 1.24)
 RUN pip install numpy==1.23 && \
     pip install megalodon pod5
 
-RUN pip install ont-pyguppy-client-lib==5.0.16
+RUN pip install ont-pyguppy-client-lib==6.4.6
