@@ -38,7 +38,9 @@ task guppybarcoder  {
     }
     command <<<
     mkdir out
-    guppy_barcoder -i ~{infastq} -s ./out --barcode_kits SQK-RBK114-24 --enable_trim_barcodes --compress_fastq
+    mkdir in
+    cp ~{infastq} ./in
+    guppy_barcoder -i ./in -s ./out --barcode_kits SQK-RBK114-24 --enable_trim_barcodes --compress_fastq
     >>>
     runtime {
 		docker: "us-central1-docker.pkg.dev/aryeelab/docker/megalodon"
