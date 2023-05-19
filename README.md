@@ -20,12 +20,12 @@ https://hub.docker.com/editions/community/docker-ce-desktop-mac
 
 Tools tested:
 
-| Tool        | 5mC (CpG) | 5mC (GpC) | 6mA | Notes                          |
-| ----------- | --------- |-----------|-----|--------------------------------|
-| Nanopolish  | X         |    X      |     |                                |
-| Dorado      | X         |    ?      |     |                                |
-| Megalodon   | X         |    X      |  X  |                                | 
-| NanoHiMe    | X         |           |  X  | About 8 hours per GB of fast5s |
+| Tool        | 5mC (CpG) | 5mC (GpC) | 6mA               | Notes                          |
+| ----------- | --------- |-----------|-------------------|--------------------------------|
+| Nanopolish  | X         |    X      |                   |                                |
+| Dorado      | X         |    ?      | (10.4.1 only)     |                                |
+| Megalodon   | X         |    X      |  X                |                                | 
+| NanoHiMe    | X         |           |  X                | About 8 hours per GB of fast5s |
 
 
 #### Test datasets
