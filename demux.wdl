@@ -66,7 +66,7 @@ task makefast5s {
         for f in ./out/*; do tar czvf "$f.tar.gz" "$f"/*.fast5; done
     >>>
     runtime {
-		docker: "us-central1-docker.pkg.dev/aryeelab/docker/megalodon"
+		docker: "us-central1-docker.pkg.dev/aryeelab/docker/ontfast5api"
 		memory: "64 GB"
 		disks: "local-disk 1000 SSD"
 		cpu: 12
