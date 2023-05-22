@@ -43,7 +43,7 @@ task guppybarcoder  {
     mkdir in
     cp ~{infastq} ./in
     guppy_barcoder -i ./in -s ./out --barcode_kits SQK-RBK114-24 --enable_trim_barcodes --compress_fastq
-    for f in ./out/*; do mv "$f"/*.fastq.gz "$f"/"$f".fastq.gz; done
+    for f in ./out/*; do mv "$f"/*.fastq.gz "$f".fastq.gz; done
     >>>
     runtime {
 		docker: "us-central1-docker.pkg.dev/aryeelab/docker/megalodon"
