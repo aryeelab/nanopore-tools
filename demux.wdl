@@ -5,6 +5,7 @@ workflow demux {
     input {
         File infastq
         File reads
+        File pythonscript
     }
 
     call guppybarcoder {
@@ -14,6 +15,7 @@ workflow demux {
     call makefast5s {
         input:
             reads=reads,
+            pythonscript=pythonscript,
             barcoding_summary = guppybarcoder.barcoding_summary
     }
     call makesheet {
@@ -41,6 +43,7 @@ task guppybarcoder  {
     mkdir in
     cp ~{infastq} ./in
     guppy_barcoder -i ./in -s ./out --barcode_kits SQK-RBK114-24 --enable_trim_barcodes --compress_fastq
+    for f in ./out/*; do mv "$f"/*.fastq.gz "$f"/"$f".fastq.gz; done
     >>>
     runtime {
 		docker: "us-central1-docker.pkg.dev/aryeelab/docker/megalodon"
@@ -56,13 +59,14 @@ task guppybarcoder  {
 task makefast5s {
     input {
         File reads
+        File pythonscript
         File barcoding_summary
     }
     command <<<
         mkdir in
         tar xvzf ~{reads} -C ./in
         mkdir out
-        demux_fast5 --input ./in --save_path ./out --summary_file ~{barcoding_summary}
+        python3 ~{pythonscript} --input ./in --save_path ./out --summary_file ~{barcoding_summary}
         for f in ./out/*; do tar czvf "$f.tar.gz" "$f"/*.fast5; done
     >>>
     runtime {
