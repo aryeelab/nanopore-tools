@@ -71,7 +71,7 @@ task makefast5s {
         mkdir in
         tar xvzf ~{reads} -C ./in
         mkdir out
-        python3 ~{pythonscript} --input ./in --save_path ./out --summary_file ~{barcoding_summary}
+        python3 ~{pythonscript} --input ./in --save_path ./out --summary_file ~{barcoding_summary} --demultiplex_column barcode_rear_end_index
         for f in ./out/*; do tar czvf "$f.tar.gz" "$f"/*.fast5; done
     >>>
     runtime {
