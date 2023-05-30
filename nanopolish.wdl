@@ -82,7 +82,7 @@ task guppy {
     }
     command <<<
     mkdir ./samples
-    tar zxvf ~{reads} -C ./samples
+    tar zxvf ~{reads} -C ./samples --wildcards --no-anchored '*.fast5'
     mkdir ./out
     guppy_basecaller -i ./samples -s ./out -c ~{config} -m ~{model} -x "cuda:all" --num_callers 4 --gpu_runners_per_device 8
     cat ./out/**/*.fastq > ./out/allguppy.fastq
@@ -111,7 +111,7 @@ task nanopolish {
     mkdir ./index
     cp ~{allguppy} ./index/
     mkdir ./samples
-    tar zxvf ~{reads} -C ./samples
+    tar zxvf ~{reads} -C ./samples --wildcards --no-anchored '*.fast5'
     nanopolish index -d ./samples ./index/allguppy.fastq
     >>>
     runtime {
@@ -180,7 +180,7 @@ task methylation {
     }
     command <<<
     mkdir ./samples
-    tar zxvf ~{reads} -C ./samples
+    tar zxvf ~{reads} -C ./samples --wildcards --no-anchored '*.fast5'
     mkdir ./temp
     cp ~{allguppy} ~{filteredbam} ~{filteredbai} ~{nanoindex} ~{nanofastaindex} ~{nanoindexgzi} ~{nanoreaddb} ./temp/
     nanopolish call-methylation --methylation=~{type} -t 8 -r ./temp/allguppy.fastq -b ./temp/filtered.bam -g ~{genome} > methylationcalls.tsv
