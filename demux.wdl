@@ -50,7 +50,6 @@ task guppybarcoder  {
         done
     done
     column=$(head -n 2 ./out/barcoding_summary.txt | tail -n 1 | awk -F$'\t' 'BEGIN{search="unclassified|barcode"} { for (i=1; i<=NF; i++) { if ($i ~ search) print i } }')
-    echo ${column}
     cat ./out/barcoding_summary.txt | cut -f 1,${column} >> ./out/twocolumnsummary.tsv
     >>>
     runtime {
@@ -79,7 +78,8 @@ task makefast5s {
             tar xvzf ~{reads} -C ./in
         fi
         mkdir out
-        python3 ~{pythonscript} --input ./in --save_path ./out --summary_file ~{barcoding_summary}
+        column_name=$(awk -F'\t' 'NR==1 {print $2}' ~{barcoding_summary})
+        python3 ~{pythonscript} --input ./in --save_path ./out --summary_file ~{barcoding_summary} --demultiplex_column ${column_name}
         for f in ./out/*; do tar czvf "$f.tar.gz" "$f"/*.fast5; done
     >>>
     runtime {
