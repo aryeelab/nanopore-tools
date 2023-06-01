@@ -50,7 +50,8 @@ task guppybarcoder  {
         done
     done
     column=$(head -n 2 ./out/barcoding_summary.txt | tail -n 1 | awk -F$'\t' 'BEGIN{search="unclassified|barcode"} { for (i=1; i<=NF; i++) { if ($i ~ search) print i } }')
-    cat ./out/barcoding_summary.txt | cut -f 1, ${column} >> ./out/twocolumnsummary.tsv
+    echo ${column}
+    cat ./out/barcoding_summary.txt | cut -f 1,${column} >> ./out/twocolumnsummary.tsv
     >>>
     runtime {
 		docker: "us-central1-docker.pkg.dev/aryeelab/docker/megalodon"
