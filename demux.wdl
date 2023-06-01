@@ -49,6 +49,8 @@ task guppybarcoder  {
             mv "$file" "$f/$dir_name-${file##*/}"
         done
     done
+    column=$(head -n 2 testbarcodingsummary.txt | tail -n 1 | awk -F$'\t' 'BEGIN{search="unclassified|barcode"} { for (i=1; i<=NF; i++) { if ($i ~ search) print i } }')
+    cat ./out/barcoding_summary.txt | cut -f 1, ${column} >> ./out/twocolumnsummary.tsv
     >>>
     runtime {
 		docker: "us-central1-docker.pkg.dev/aryeelab/docker/megalodon"
@@ -57,7 +59,7 @@ task guppybarcoder  {
 		cpu: 12
     }
     output {
-        File barcoding_summary = "./out/barcoding_summary.txt"
+        File barcoding_summary = "./out/twocolumnsummary.tsv"
         Array[File] fastq_gzs = glob("./out/*/*.fastq.gz")
     }
 }
@@ -76,7 +78,7 @@ task makefast5s {
             tar xvzf ~{reads} -C ./in
         fi
         mkdir out
-        python3 ~{pythonscript} --input ./in --save_path ./out --summary_file ~{barcoding_summary} --demultiplex_column barcode_rear_end_index
+        python3 ~{pythonscript} --input ./in --save_path ./out --summary_file ~{barcoding_summary}
         for f in ./out/*; do tar czvf "$f.tar.gz" "$f"/*.fast5; done
     >>>
     runtime {
