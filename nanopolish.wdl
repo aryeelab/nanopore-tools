@@ -57,7 +57,8 @@ workflow guppytonanopolish {
     call bedtobigwig {
         input:
             chromsizes=chromsizes,
-            FivemCavgbedgraph=nanotobed.FivemCavgbedgraph
+            FivemCavgbedgraph=nanotobed.FivemCavgbedgraph,
+            FivemCbedgraph=nanotobed.FivemCbedgraph
     }
     output {
         File allguppy = guppy.allguppy
@@ -205,7 +206,8 @@ task nanotobed {
     command <<<
     python3 ~{pythonscript} -s -m ~{typeagain} ~{methylationcalls} > methylationfrequency.tsv
     tail -n +2 methylationfrequency.tsv | awk '{ print $1"\t"$2"\t"$3+1"\tid-"NR"\t"$7; }' | sort-bed - > FivemC.percentage.bed
-    bedops --chop 1000 ~{sortedbed} | bedmap --faster --echo --mean --count --delim "\t" --skip-unmapped - FivemC.percentage.bed | cat | cut -f 1,2,3,4 | sort -k1,1 -k2,2n > nanopolish5mC.1k.bedgraph
+    cat FivemC.percentage.bed | cut -f 1,2,3,5 | sort -k1,1 -k2,2n > nanopolish5mC.bedgraph
+    bedops --chop 100 ~{sortedbed} | bedmap --faster --echo --mean --count --delim "\t" --skip-unmapped - FivemC.percentage.bed | cat | cut -f 1,2,3,4 | sort -k1,1 -k2,2n > nanopolish5mC.1k.bedgraph
     >>>
     runtime {
         docker: "us-central1-docker.pkg.dev/aryeelab/docker/bedops:latest"
@@ -215,16 +217,19 @@ task nanotobed {
     }
     output {
         File FivemCbed = "FivemC.percentage.bed"
+        File FivemCbedgraph = "nanopolish5mC.bedgraph"
         File FivemCavgbedgraph = "nanopolish5mC.1k.bedgraph"
     }
 }
 task bedtobigwig {
     input {
         File FivemCavgbedgraph
+        File FivemCbedgraph
         File chromsizes
     }
     command <<<
     bedGraphToBigWig ~{FivemCavgbedgraph} ~{chromsizes} FivemCavg.bw
+    bedGraphToBigWig ~{FivemCbedgraph} ~{chromsizes} FivemC.bw
     >>>
     runtime {
         docker: "us-central1-docker.pkg.dev/aryeelab/docker/bedtools:latest"
@@ -234,5 +239,6 @@ task bedtobigwig {
     }
     output {
         File FivemCavgbw = "FivemCavg.bw"
+        File FivemCbw = "FivemC.bw"
     }
 }

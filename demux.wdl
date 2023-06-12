@@ -20,13 +20,13 @@ workflow demux {
     }
     call makesheet {
         input:
-            fastq_gzs = guppybarcoder.fastq_gzs,
+            fastqs = guppybarcoder.fastqs,
             fast5_tars = makefast5s.fast5_tars
     }
     output {
         File samplesheet=makesheet.samplesheet
         Array[File] fast5_tars = makefast5s.fast5_tars
-        Array[File] fastq_gzs = guppybarcoder.fastq_gzs
+        Array[File] fastqs = guppybarcoder.fastqs
     }
 
     meta {
@@ -42,12 +42,13 @@ task guppybarcoder  {
     mkdir out
     mkdir in
     cp ~{infastq} ./in
-    guppy_barcoder -i ./in -s ./out --barcode_kits SQK-RBK114-24 --enable_trim_barcodes --compress_fastq
+    guppy_barcoder -i ./in -s ./out --barcode_kits SQK-RBK114-24 --enable_trim_barcodes
     for f in ./out/*; do
         dir_name="${f##*/}"
-        for file in "$f"/*.fastq.gz; do
-            mv "$file" "$f/$dir_name-${file##*/}"
-        done
+        cat "$f"/*.fastq > ./out/"$dir_name".fastq
+        # for file in "$f"/*.fastq; do
+        #     mv "$file" "$f/$dir_name-${file##*/}"
+        # done
     done
     column=$(head -n 2 ./out/barcoding_summary.txt | tail -n 1 | awk -F$'\t' 'BEGIN{search="unclassified|barcode"} { for (i=1; i<=NF; i++) { if ($i ~ search) print i } }')
     cat ./out/barcoding_summary.txt | cut -f 1,${column} >> ./out/twocolumnsummary.tsv
@@ -60,7 +61,7 @@ task guppybarcoder  {
     }
     output {
         File barcoding_summary = "./out/twocolumnsummary.tsv"
-        Array[File] fastq_gzs = glob("./out/*/*.fastq.gz")
+        Array[File] fastqs = glob("./out/*.fastq")
     }
 }
 task makefast5s {
@@ -94,11 +95,11 @@ task makefast5s {
 }
 task makesheet {
     input {
-        Array[String] fastq_gzs
+        Array[String] fastqs
         Array[String] fast5_tars
     }
     command <<<
-        echo fastq_gz ~{sep=' ' fastq_gzs} >> samples_t.txt
+        echo fastq_gz ~{sep=' ' fastqs} >> samples_t.txt
         echo fast5_tar ~{sep=' ' fast5_tars} >> samples_t.txt
         cat samples_t.txt | datamash --output-delimiter=',' -t ' ' transpose > samples.csv
     >>>
