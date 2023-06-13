@@ -8,7 +8,7 @@ jobs:
   build-docker:
     strategy:
       matrix:
-        IMAGE_NAME: ['dorado', 'megalodon', 'minimap2', 'nanopolish', 'bedops', 'bedtools', 'nanohime', 'ontfast5api']
+        IMAGE_NAME: ['dorado', 'megalodon', 'minimap2', 'nanopolish', 'bedops', 'bedtools', 'nanohime', 'ontfast5api', 'modkit']
 
     name: Build Docker
     runs-on: ubuntu-latest  
