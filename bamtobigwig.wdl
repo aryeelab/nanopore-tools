@@ -17,15 +17,19 @@ workflow bamtobigwig {
         input:
             sortedbam = minimapalign.sortedbam
     }
-    call tobigwig {
+    call tobedgraph {
         input:
-            chromsizes = chromsizes,
             genome = genome,
             filteredbai = filter.filteredbai,
             filteredbam = filter.filteredbam
     }
+    call tobigwig {
+        input:
+            FivemCcpgbedgraph = tobedgraph.FivemCcpgbedgraph,
+            chromsizes = chromsizes
+    }
     output {
-        File FivemCcpgbedgraph = tobigwig.FivemCcpgbedgraph
+        File FivemCcpgbedgraph = tobedgraph.FivemCcpgbedgraph
         File FivemCcpgbw = tobigwig.FivemCcpgbw
     }
 
@@ -72,17 +76,33 @@ task filter {
         File filteredbai = "filtered.bam.bai"
     }
 }
-task tobigwig {
+task tobedgraph {
     input {
         File genome
-        File chromsizes
         File filteredbam
         File filteredbai
     }
     command <<<
     modkit pileup ~{filteredbam} big5mC.cpg.bed --cpg --ref ~{genome} --ignore h -t 12 --combine-strands
-    awk '$10 > 0 {printf "%s\t%d\t%d\t%2.3f\n" , $1,$2,$3,$11}' | sort -k1,1 -k2,2n > 5mC.cpg.bedgraph
-    bedGraphToBigWig 5mC.cpg.bedgraph ~{chromsizes} 5mC.cpg.bw
+    awk '$10 > 0 {printf "%s\t%d\t%d\t%2.3f\n" , $1,$2,$3,$11}' big5mC.cpg.bed | sort -k1,1 -k2,2n > 5mC.cpg.bedgraph
+    >>>
+    runtime {
+        docker: "us-central1-docker.pkg.dev/aryeelab/docker/modkit:latest"
+		memory: "64G"
+		disks: "local-disk 500 SSD"
+		cpu: 8
+    }
+    output {
+        File FivemCcpgbedgraph = "5mC.cpg.bedgraph"
+    }
+}
+task tobigwig {
+    input {
+        File FivemCcpgbedgraph
+        File chromsizes
+    }
+    command <<<
+    bedGraphToBigWig ~{FivemCcpgbedgraph} ~{chromsizes} 5mC.cpg.bw
     >>>
     runtime {
         docker: "us-central1-docker.pkg.dev/aryeelab/docker/bedtools:latest"
@@ -92,6 +112,5 @@ task tobigwig {
     }
     output {
         File FivemCcpgbw = "5mC.cpg.bw"
-        File FivemCcpgbedgraph = "5mC.cpg.bedgraph"
     }
 }
