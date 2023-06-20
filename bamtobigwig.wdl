@@ -44,8 +44,8 @@ task minimapalign {
         File genome
     }
     command <<<
-    minimap2 -ax map-ont -y ~{genome} ~{fastq} > sorted.bam
-    samtools sort -T tmp -o sorted.bam
+    minimap2 -ax map-ont -y ~{genome} ~{fastq} > temp.bam
+    samtools sort -T tmp -o sorted.bam temp.bam
     samtools index sorted.bam
     >>>
     runtime {
