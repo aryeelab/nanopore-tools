@@ -42,7 +42,7 @@ task guppybarcoder  {
     mkdir out
     mkdir in
     cp ~{infastq} ./in
-    guppy_barcoder -i ./in -s ./out --barcode_kits SQK-RBK114-24 --enable_trim_barcodes
+    guppy_barcoder -i ./in -s ./out --barcode_kits SQK-RBK114-24 #--enable_trim_barcodes
     for f in ./out/*; do
         dir_name="${f##*/}"
         cat "$f"/*.fastq > ./out/"$dir_name".fastq
