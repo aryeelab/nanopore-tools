@@ -4,6 +4,7 @@ workflow dorado_basecall {
 
     input {
         String sample_id
+        String modtype
         File fast5_archive
         String basecall_model
     }
@@ -12,6 +13,7 @@ workflow dorado_basecall {
         input:
             sample_id = sample_id,
             fast5_archive = fast5_archive,
+            modtype=modtype,
             basecall_model = basecall_model
     }
     call makefastqs {
@@ -35,6 +37,7 @@ task basecall  {
         String sample_id
         File fast5_archive
         String basecall_model
+        String modtype
         Int disk_gb = ceil(size(fast5_archive, "GB")*3) + 5
     }
     command <<<
@@ -62,7 +65,7 @@ task basecall  {
         fi
         
         # Simplex call with --emit-moves and --modified-bases
-        dorado basecaller /dorado_models/~{basecall_model} pod5s --modified-bases 5mCG_5hmCG --emit-moves | samtools view -Sh > ~{sample_id}.unmapped.bam
+        dorado basecaller /dorado_models/~{basecall_model} pod5s --modified-bases ~{modtype} --emit-moves | samtools view -Sh > ~{sample_id}.unmapped.bam
 
         # Identify potential pairs
         duplex_tools pair --output_dir ./pairs ~{sample_id}.unmapped.bam
