@@ -53,7 +53,7 @@ task basecall  {
           mkdir fast5s
           tar zxvf ~{fast5_archive} -C fast5s
           # Convert FAST5 into POD5
-          pod5 convert fast5 -r fast5s pod5s/reads.pod5 --threads 12 
+          pod5 convert fast5 ./fast5s/*.fast5 -o pod5s/reads.pod5 --threads 12 
         fi
 
         if [[ "$filetype" == *"Zip archive data"* ]]; then
@@ -61,11 +61,11 @@ task basecall  {
           mkdir fast5s 
           unzip ~{fast5_archive} -d fast5s
           # Convert FAST5 into POD5
-          pod5 convert fast5 -r fast5s pod5s/reads.pod5 --threads 12 
+          pod5 convert fast5 ./fast5s/*.fast5 -o /pod5s/reads.pod5 --threads 12 
         fi
         
         # Simplex call with --emit-moves and --modified-bases
-        dorado basecaller /dorado_models/~{basecall_model} pod5s --modified-bases ~{modtype} --emit-moves | samtools view -Sh > ~{sample_id}.unmapped.bam
+        dorado basecaller /dorado_models/~{basecall_model} pod5s~{modtype} --emit-moves | samtools view -Sh > ~{sample_id}.unmapped.bam
 
         # Identify potential pairs
         duplex_tools pair --output_dir ./pairs ~{sample_id}.unmapped.bam
