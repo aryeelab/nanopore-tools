@@ -77,7 +77,8 @@ task tobedgraph {
         File filteredbai
     }
     command <<<
-    modkit pileup ~{filteredbam} big_5mc.bed --cpg --ref ~{genome} --combine-strands --ignore h --bedgraph
+    modkit pileup ~{filteredbam} big5mC.cpg.bed --cpg --ref ~{genome} --ignore h -t 12 --combine-strands
+    awk '$10 > 0 {printf "%s\t%d\t%d\t%d\t%2.3f\n" , $1,$2,$3,$10,$11}' big5mC.cpg.bed | sort -k1,1 -k2,2n > 5mC.cpg.bedgraph
     >>>
     runtime {
         docker: "us-central1-docker.pkg.dev/aryeelab/docker/modkit:latest"
