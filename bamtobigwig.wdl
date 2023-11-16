@@ -63,7 +63,7 @@ task filter {
         File sortedbam
     }
     command <<<
-    samtools view -bh -q 50 ~{sortedbam} > filtered.bam
+    samtools view -bh -q 25 ~{sortedbam} > filtered.bam
     samtools index filtered.bam
     >>>
     runtime {
