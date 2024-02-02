@@ -1,23 +1,5 @@
 version: 1.2
-<<<<<<< HEAD
-tools:
-  - name: megalodon
-    subclass: WDL
-    primaryDescriptorPath: /megalodon.wdl
-    testParameterFiles:
-        - /megalodonsampleinput.json
-    authors:
-        - name: Mark Soliman
-          email: msoliman@ds.dfci.harvard.edu
-  - name: nanopolish
-    subclass: WDL
-    primaryDescriptorPath: /nanopolish.wdl
-  - name: demux
-    subclass: WDL
-    primaryDescriptorPath: /demux.wdl
-=======
 workflows:
    - name: dorado_basecall
      subclass: WDL
      primaryDescriptorPath: /dorado_basecall.wdl
->>>>>>> d5dc079e91a2a134663ed0bb87da93e02714662c
