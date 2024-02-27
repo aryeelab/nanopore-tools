@@ -6,6 +6,8 @@ workflow bamtobigwig {
         File genome
         File chromsizes
         File fastq
+        String modmotif
+        String modkitoptions
     }
 
     call minimapalign {
@@ -21,16 +23,18 @@ workflow bamtobigwig {
         input:
             genome = genome,
             filteredbai = filter.filteredbai,
-            filteredbam = filter.filteredbam
+            filteredbam = filter.filteredbam,
+            modmotif = modmotif,
+            modkitoptions = modkitoptions
     }
     call tobigwig {
         input:
-            FivemCcpgbedgraph = tobedgraph.FivemCcpgbedgraph,
+            filteredbedgraph = tobedgraph.filteredbedgraph,
             chromsizes = chromsizes
     }
     output {
-        File FivemCcpgbedgraph = tobedgraph.FivemCcpgbedgraph
-        File FivemCcpgbw = tobigwig.FivemCcpgbw
+        File filteredbedgraph = tobedgraph.filteredbedgraph
+        File filteredbw = tobigwig.filteredbw
     }
 
     meta {
@@ -82,10 +86,14 @@ task tobedgraph {
         File genome
         File filteredbam
         File filteredbai
+        String modmotif
+        #specify motif with modmotif - i.e. CG 0 for cpg methylation or GC 1 for gpc
+        String modkitoptions
+        #any other options that are needed
     }
     command <<<
-    modkit pileup ~{filteredbam} big5mC.cpg.bed --cpg --ref ~{genome} --ignore h -t 12 --combine-strands
-    awk '$10 > 0 {printf "%s\t%d\t%d\t%2.3f\n" , $1,$2,$3,$11}' big5mC.cpg.bed | sort -k1,1 -k2,2n > 5mC.cpg.bedgraph
+    modkit pileup ~{filteredbam} filtered.bed --motif ~{modmotif} ~{modkitoptions} --ref ~{genome} --ignore h -t 12 --combine-strands
+    awk '$10 > 0 {printf "%s\t%d\t%d\t%2.3f\n" , $1,$2,$3,$11}' filtered.bed | sort -k1,1 -k2,2n > filtered.bedgraph
     >>>
     runtime {
         docker: "us-central1-docker.pkg.dev/aryeelab/docker/modkit:latest"
@@ -94,16 +102,16 @@ task tobedgraph {
 		cpu: 8
     }
     output {
-        File FivemCcpgbedgraph = "5mC.cpg.bedgraph"
+        File filteredbedgraph = "filtered.bedgraph"
     }
 }
 task tobigwig {
     input {
-        File FivemCcpgbedgraph
+        File filteredbedgraph
         File chromsizes
     }
     command <<<
-    bedGraphToBigWig ~{FivemCcpgbedgraph} ~{chromsizes} 5mC.cpg.bw
+    bedGraphToBigWig ~{filteredbedgraph} ~{chromsizes} filtered.bw
     >>>
     runtime {
         docker: "us-central1-docker.pkg.dev/aryeelab/docker/bedtools:latest"
@@ -112,6 +120,6 @@ task tobigwig {
 		cpu: 8
     }
     output {
-        File FivemCcpgbw = "5mC.cpg.bw"
+        File filteredbw = "filtered.bw"
     }
 }
