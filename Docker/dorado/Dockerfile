@@ -21,6 +21,5 @@ RUN ln -s /dorado-0.7.2-linux-x64/bin/dorado /usr/local/bin/ && \
     rm dorado-0.7.2-linux-x64.tar.gz
 # Install basecalling models
 RUN mkdir /dorado_models && \
-    cd /dorado_models
-
-RUN dorado download 
+    cd /dorado_models && \
+    dorado download 
