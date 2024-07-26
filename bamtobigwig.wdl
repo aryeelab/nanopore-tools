@@ -9,12 +9,14 @@ workflow bamtobigwig {
         String modmotif
         String modkitoptions
         String mapqmin
+        String disk
     }
 
     call minimapalign {
         input:
             fastq = fastq,
-            genome = genome
+            genome = genome,
+            disk = disk
     }
     call filter {
         input:
@@ -48,6 +50,7 @@ task minimapalign {
     input {
         File fastq
         File genome
+        String disk
     }
     command <<<
     samtools import -T "*" ~{fastq} > temp.bam
@@ -57,7 +60,7 @@ task minimapalign {
     runtime {
         docker: "us-central1-docker.pkg.dev/aryeelab/docker/minimap2:latest"
 		memory: "64G"
-		disks: "local-disk 500 SSD"
+		disks: "local-disk " + disk + " SSD"
 		cpu: 8
     }
     output {
